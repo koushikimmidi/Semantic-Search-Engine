@@ -1,0 +1,22 @@
+[
+    {
+        "id": 1,
+        "text": "Machine Learning is a subset of Artificial Intelligence."
+    },
+    {
+        "id": 2,
+        "text": "Python is widely used in Data Science."
+    },
+    {
+        "id": 3,
+        "text": "BM25 is a keyword ranking algorithm."
+    },
+    {
+        "id": 4,
+        "text": "FastAPI is a modern web framework for Python."
+    },
+    {
+        "id": 5,
+        "text": "Neural networks are a core part of deep learning."
+    }
+]

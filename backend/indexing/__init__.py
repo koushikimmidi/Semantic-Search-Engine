@@ -1,0 +1,1 @@
+from backend.indexing.document_indexer import DocumentIndexer

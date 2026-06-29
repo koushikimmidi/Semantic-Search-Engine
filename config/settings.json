@@ -1,0 +1,16 @@
+{
+    "project_name": "Semantic Intent Search Engine",
+    "version": "1.0.0",
+    "dataset": {
+        "path": "data/raw/sample_documents.json"
+    },
+    "embedding": {
+        "model": "all-MiniLM-L6-v2"
+    },
+    "search": {
+        "top_k": 5
+    },
+    "faiss": {
+        "index_path": "data/index/faiss.index"
+    }
+}

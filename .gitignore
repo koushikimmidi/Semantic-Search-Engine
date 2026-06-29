@@ -1,20 +1,24 @@
-venv/
-.env
+# Python
 __pycache__/
-.ipynb_checkpoints/
-
 *.pyc
 *.pyo
 *.pyd
 
-*.npy
-*.npz
-*.pkl
+# Virtual Environment
+venv/
 
-data/raw/
-data/embeddings/
-
+# VS Code
 .vscode/
-.idea/
 
+# Jupyter
+.ipynb_checkpoints/
+
+# Logs
+*.log
+
+# FAISS
+*.index
+
+# OS Files
 .DS_Store
+Thumbs.db

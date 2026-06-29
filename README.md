@@ -1,33 +1,42 @@
 # Semantic Intent Search Engine
 
-## Overview
-
-An AI-powered Semantic Search Engine that understands user intent rather than relying only on keyword matching.
-
 ## Features
 
-- BM25 Retrieval
-- Dense Retrieval using Sentence Transformers
-- Hybrid Search (BM25 + Dense Retrieval)
-- Query Decomposition using Gemini
-- Cross-Encoder Re-ranking
-- Retrieval-Augmented Generation (RAG)
-- FastAPI Backend
-- React Frontend
-- BEIR Benchmark Evaluation
-
-## Tech Stack
-
-- Python
-- FastAPI
+- BM25 Search
+- Dense Search
+- Hybrid Search
+- FAISS Index
 - Sentence Transformers
-- FAISS
-- BM25
-- LangChain
-- Gemini API
-- React
-- Docker
+- Reciprocal Rank Fusion
+- Performance Profiling
+- Logging
+- JSON Configuration
 
-## Project Status
+## Project Structure
 
-Week 1 - Project Setup
+(project tree)
+
+## Installation
+
+pip install -r requirements.txt
+
+## Run
+
+python -m scripts.test_engine
+
+## Technologies
+
+Python
+FAISS
+Sentence Transformers
+Rank-BM25
+NLTK
+NumPy
+
+## Future Work
+
+FastAPI
+React
+RAG
+Cross Encoder
+Query Expansion
