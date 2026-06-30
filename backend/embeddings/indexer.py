@@ -1,21 +1,59 @@
+import os
 import faiss
-import numpy as np
 
 
 class FAISSIndexer:
-    """
-    Builds and stores a FAISS index.
-    """
 
     def __init__(self, dimension):
-        self.index = faiss.IndexFlatL2(dimension)
+
+        self.dimension = dimension
+
+        self.index = faiss.IndexFlatL2(
+            dimension
+        )
 
     def build(self, embeddings):
-        embeddings = np.array(embeddings).astype("float32")
-        self.index.add(embeddings)
 
-    def save(self, path):
-        faiss.write_index(self.index, path)
+        self.index.add(
+            embeddings
+        )
 
-    def load(self, path):
-        self.index = faiss.read_index(path)
+    def save(
+
+        self,
+
+        path="data/index/faiss.index"
+
+    ):
+
+        os.makedirs(
+            "data/index",
+            exist_ok=True
+        )
+
+        faiss.write_index(
+            self.index,
+            path
+        )
+
+    def load(
+
+        self,
+
+        path="data/index/faiss.index"
+
+    ):
+
+        self.index = faiss.read_index(
+            path
+        )
+
+    def exists(
+
+        self,
+
+        path="data/index/faiss.index"
+
+    ):
+
+        return os.path.exists(path)

@@ -1,6 +1,10 @@
 from backend.indexing import DocumentIndexer
-from backend.embeddings.encoder import EmbeddingEncoder
-from backend.embeddings.indexer import FAISSIndexer
+
+from backend.embeddings import (
+    EmbeddingEncoder,
+    FAISSIndexer,
+    EmbeddingCache
+)
 
 
 class IngestionPipeline:
@@ -10,6 +14,8 @@ class IngestionPipeline:
         self.indexer = DocumentIndexer()
 
         self.encoder = EmbeddingEncoder()
+
+        self.cache = EmbeddingCache()
 
         self.faiss = None
 
@@ -26,13 +32,31 @@ class IngestionPipeline:
 
         if len(texts) == 0:
 
-            print("No new documents found.")
+            print()
 
-            return None
+            print("Loading cached embeddings...")
 
-        embeddings = self.encoder.encode(
-            texts
-        )
+            if not self.cache.exists():
+
+                print("No embedding cache found.")
+
+                return None
+
+            embeddings = self.cache.load()
+
+        else:
+
+            print()
+
+            print("Generating embeddings...")
+
+            embeddings = self.encoder.encode(
+                texts
+            )
+
+            self.cache.save(
+                embeddings
+            )
 
         self.faiss = FAISSIndexer(
             embeddings.shape[1]
@@ -42,13 +66,17 @@ class IngestionPipeline:
             embeddings
         )
 
+        self.faiss.save()
+
         print()
 
         print("=" * 60)
         print("INGESTION COMPLETE")
         print("=" * 60)
 
-        print(f"Indexed Chunks : {len(documents)}")
+        print(
+            f"Vectors : {self.faiss.index.ntotal}"
+        )
 
         return {
 

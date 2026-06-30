@@ -109,3 +109,33 @@ Distance:0.8788
 Observation:Dense Retrieval also retrieved the correct document as the top result. Although it uses semantic embeddings rather than keyword matching, it successfully identified the relevant document.
 
 Winner:Tie (Both BM25 and Dense Retrieval correctly retrieved the BM25 document as the top-ranked result.)
+
+
+# Week 2 Conclusion
+
+This week focused on implementing and comparing Dense Retrieval and BM25 Retrieval.
+
+Dense Retrieval used Sentence Transformers and FAISS to perform semantic search by understanding the meaning of the query and documents.
+
+BM25 Retrieval ranked documents using keyword frequency and inverse document frequency.
+
+Observations:
+
+- BM25 performed best when the query exactly matched document keywords.
+- Dense Retrieval successfully understood semantic meaning even when exact keywords were not present.
+- For the current dataset, both retrieval methods produced correct top-ranked documents for most queries.
+- Dense Retrieval is more suitable for natural language search, whereas BM25 is effective for exact keyword matching.
+
+Week 2 Outcome:
+
+✔ Implemented Sentence Transformer embeddings.
+
+✔ Built a FAISS vector index.
+
+✔ Performed semantic search.
+
+✔ Compared BM25 and Dense Retrieval.
+
+✔ Documented experimental results for multiple queries.
+
+The project is now ready for Hybrid Retrieval, where BM25 and Dense Retrieval will be combined to achieve higher search accuracy.
