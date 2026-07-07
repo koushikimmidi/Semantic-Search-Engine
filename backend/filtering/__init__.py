@@ -1,0 +1,1 @@
+from backend.filtering.result_filter import ResultFilter

@@ -8,6 +8,7 @@ from backend.reranker import RerankPipeline
 from backend.utils import ProjectLogger
 from backend.profiling import PerformanceProfiler
 from backend.query.pipeline import QueryPipeline
+from backend.filtering import ResultFilter
 
 
 class SearchEngine:
@@ -30,12 +31,10 @@ class SearchEngine:
         self.searcher = None
         self.hybrid = None
 
-        # NEW
         self.reranker = None
+        self.filter = ResultFilter()
 
     def load(self):
-
-        # ---------------- Loading Documents ----------------
 
         self.profiler.start("Loading Documents")
 
@@ -59,15 +58,11 @@ class SearchEngine:
 
         self.profiler.stop("Loading Documents")
 
-        # ---------------- BM25 ----------------
-
         self.logger.info("Building BM25...")
 
         self.bm25 = BM25Retriever(
             tokenized_docs
         )
-
-        # ---------------- Encoding ----------------
 
         self.profiler.start("Encoding")
 
@@ -80,8 +75,6 @@ class SearchEngine:
         )
 
         self.profiler.stop("Encoding")
-
-        # ---------------- FAISS ----------------
 
         self.profiler.start("Building FAISS")
 
@@ -102,14 +95,10 @@ class SearchEngine:
             self.indexer.index
         )
 
-        # ---------------- Hybrid Search ----------------
-
         self.hybrid = HybridSearch(
             self.bm25,
             self.searcher
         )
-
-        # ---------------- Cross Encoder ----------------
 
         self.logger.info("Loading Cross Encoder...")
 
@@ -117,11 +106,13 @@ class SearchEngine:
 
         self.logger.info("Search Engine Ready!")
 
-    def search(self, query):
-
-        # =====================================================
-        # Query Processing
-        # =====================================================
+    def search(
+        self,
+        query,
+        source=None,
+        extension=None,
+        page=None
+    ):
 
         stages = self.query_pipeline.process(query)
 
@@ -140,8 +131,6 @@ class SearchEngine:
 
         query_tokens = processed_query.lower().split()
 
-        # ---------------- BM25 ----------------
-
         self.profiler.start("BM25 Search")
 
         bm25_results = self.bm25.search(
@@ -155,8 +144,6 @@ class SearchEngine:
             self.processed_docs[index]["id"]
             for index, score in bm25_results
         ]
-
-        # ---------------- Dense Search ----------------
 
         self.profiler.start("Dense Search")
 
@@ -172,8 +159,6 @@ class SearchEngine:
             for index in indices
         ]
 
-        # ---------------- Hybrid Search ----------------
-
         self.profiler.start("Hybrid Fusion")
 
         hybrid_results = self.hybrid.search(
@@ -184,8 +169,6 @@ class SearchEngine:
 
         self.profiler.stop("Hybrid Fusion")
 
-        # ---------------- Cross Encoder ----------------
-
         self.profiler.start("Cross Encoder")
 
         final_results = self.reranker.rerank(
@@ -195,8 +178,23 @@ class SearchEngine:
 
         self.profiler.stop("Cross Encoder")
 
-        # ---------------- Performance ----------------
+        # =====================================================
+        # TEMPORARY DEBUG (REMOVE AFTER TESTING)
+        # =====================================================
 
+        print()
+        print("=" * 60)
+        print("FINAL RESULTS STRUCTURE")
+        print("=" * 60)
+
+        for result in final_results:
+            print(result)
+
+        print("=" * 60)
+
+        # =====================================================
+
+        # Temporarily return without filtering
         self.profiler.report()
 
         return final_results

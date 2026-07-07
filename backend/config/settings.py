@@ -1,32 +1,78 @@
 """
-Project Configuration File
+Project Configuration
 
-All configurable values are stored here.
-If you want to change a model, dataset path,
-or search settings, modify this file only.
+Reads configuration from .env.
+Falls back to default values if a variable
+is not present.
 """
+
+import os
+
+from dotenv import load_dotenv
+
+
+load_dotenv()
 
 
 class Settings:
 
+    # ---------------- Project ----------------
+
+    PROJECT_NAME = os.getenv(
+        "PROJECT_NAME",
+        "Semantic Intent Search Engine"
+    )
+
+    VERSION = os.getenv(
+        "VERSION",
+        "1.0.0"
+    )
+
     # ---------------- Dataset ----------------
 
-    DATA_PATH = "data/raw/sample_documents.json"
+    DATA_PATH = os.getenv(
+        "DATA_PATH",
+        "data/raw/sample_documents.json"
+    )
 
-    # ---------------- Embedding Model ----------------
+    # ---------------- Embedding ----------------
 
-    EMBEDDING_MODEL = "all-MiniLM-L6-v2"
+    EMBEDDING_MODEL = os.getenv(
+        "EMBEDDING_MODEL",
+        "all-MiniLM-L6-v2"
+    )
 
     # ---------------- Search ----------------
 
-    TOP_K = 5
+    TOP_K = int(
+        os.getenv(
+            "TOP_K",
+            "5"
+        )
+    )
 
     # ---------------- FAISS ----------------
 
-    INDEX_PATH = "data/index/faiss.index"
+    INDEX_PATH = os.getenv(
+        "INDEX_PATH",
+        "data/index/faiss.index"
+    )
 
-    # ---------------- Project ----------------
+    # ---------------- Ollama ----------------
 
-    PROJECT_NAME = "Semantic Intent Search Engine"
+    OLLAMA_HOST = os.getenv(
+        "OLLAMA_HOST",
+        "http://127.0.0.1:11434"
+    )
 
-    VERSION = "1.0.0"
+    OLLAMA_MODEL = os.getenv(
+        "OLLAMA_MODEL",
+        "gemma4:latest"
+    )
+
+    # ---------------- Logging ----------------
+
+    LOG_LEVEL = os.getenv(
+        "LOG_LEVEL",
+        "INFO"
+    )

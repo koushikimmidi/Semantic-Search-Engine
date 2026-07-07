@@ -1,52 +1,44 @@
 import numpy as np
 
-from backend.embeddings import (
-    FAISSIndexer,
-    IndexPersistence
-)
+from backend.embeddings import FAISSIndexer
+from backend.persistence import PersistenceManager
 
 
 def main():
 
-    vectors = np.random.rand(
+    embeddings = np.random.rand(
         5,
         384
     ).astype("float32")
 
-    indexer = FAISSIndexer(384)
-
-    indexer.build(vectors)
-
-    persistence = IndexPersistence()
-
-    persistence.save(
-        indexer.index,
-        [
-            "Doc A",
-            "Doc B",
-            "Doc C",
-            "Doc D",
-            "Doc E"
-        ]
+    indexer = FAISSIndexer(
+        384
     )
 
+    indexer.build(
+        embeddings
+    )
+
+    manager = PersistenceManager()
+
+    manager.save(
+        embeddings,
+        indexer
+    )
+
+    loaded = manager.load_embeddings()
+
     print()
 
-    print("Index Saved Successfully")
-
-    index, docs = persistence.load()
-
-    print()
-
-    print("Index Loaded Successfully")
+    print("=" * 60)
+    print("PERSISTENCE TEST")
+    print("=" * 60)
 
     print()
 
-    print("Documents")
+    print("Embedding Shape:", loaded.shape)
 
-    for document in docs:
-
-        print(document)
+    print("FAISS Saved Successfully")
 
 
 if __name__ == "__main__":

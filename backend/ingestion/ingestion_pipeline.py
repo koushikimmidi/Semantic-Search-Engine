@@ -2,9 +2,10 @@ from backend.indexing import DocumentIndexer
 
 from backend.embeddings import (
     EmbeddingEncoder,
-    FAISSIndexer,
-    EmbeddingCache
+    FAISSIndexer
 )
+
+from backend.persistence import PersistenceManager
 
 
 class IngestionPipeline:
@@ -15,7 +16,7 @@ class IngestionPipeline:
 
         self.encoder = EmbeddingEncoder()
 
-        self.cache = EmbeddingCache()
+        self.persistence = PersistenceManager()
 
         self.faiss = None
 
@@ -36,13 +37,13 @@ class IngestionPipeline:
 
             print("Loading cached embeddings...")
 
-            if not self.cache.exists():
+            if not self.persistence.embedding_exists():
 
                 print("No embedding cache found.")
 
                 return None
 
-            embeddings = self.cache.load()
+            embeddings = self.persistence.load_embeddings()
 
         else:
 
@@ -54,10 +55,6 @@ class IngestionPipeline:
                 texts
             )
 
-            self.cache.save(
-                embeddings
-            )
-
         self.faiss = FAISSIndexer(
             embeddings.shape[1]
         )
@@ -66,7 +63,10 @@ class IngestionPipeline:
             embeddings
         )
 
-        self.faiss.save()
+        self.persistence.save(
+            embeddings,
+            self.faiss
+        )
 
         print()
 
