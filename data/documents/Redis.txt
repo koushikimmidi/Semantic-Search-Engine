@@ -1,0 +1,31 @@
+Redis
+
+Definition
+
+Redis is an in-memory data store used as a cache, message broker, and lightweight database.
+
+How it Works
+
+Redis stores data in RAM, allowing extremely fast read and write operations.
+
+Key Points
+
+• Very fast
+• In-memory storage
+• Supports caching
+• Supports multiple data structures
+
+Applications
+
+• Session Storage
+• Caching
+• Real-time Analytics
+• Message Queues
+
+Example
+
+A website caches frequently accessed user data in Redis to improve response time.
+
+Summary
+
+Redis improves application performance by providing extremely fast data access.

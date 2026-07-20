@@ -1,0 +1,34 @@
+SQL (Structured Query Language)
+
+Definition
+
+SQL is a standard language used to store, retrieve, update, and manage data in relational databases.
+
+How it Works
+
+SQL communicates with a database using commands such as SELECT, INSERT, UPDATE, DELETE, and CREATE.
+
+Key Commands
+
+• SELECT
+• INSERT
+• UPDATE
+• DELETE
+• CREATE
+• ALTER
+• DROP
+
+Applications
+
+• Database Management
+• Data Analysis
+• Web Applications
+• Business Intelligence
+
+Example
+
+SELECT * FROM Students;
+
+Summary
+
+SQL is the standard language for managing relational databases and is an essential skill for software developers.

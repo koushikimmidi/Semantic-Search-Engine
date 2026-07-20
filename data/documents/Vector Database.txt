@@ -1,0 +1,31 @@
+Vector Databases
+
+Definition
+
+A Vector Database stores and indexes embeddings to enable fast similarity search over large datasets.
+
+How it Works
+
+Documents are converted into embeddings and stored in the database. User queries are also converted into embeddings, and the database returns the most similar vectors.
+
+Popular Vector Databases
+
+• Pinecone
+• Milvus
+• Weaviate
+• Chroma
+
+Applications
+
+• RAG Systems
+• Semantic Search
+• Recommendation Systems
+• AI Assistants
+
+Example
+
+An enterprise chatbot retrieves company documents from a vector database before generating an answer.
+
+Summary
+
+Vector Databases are specialized systems designed for storing and searching embeddings efficiently, making them a core component of modern AI applications.

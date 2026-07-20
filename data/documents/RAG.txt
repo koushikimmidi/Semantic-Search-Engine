@@ -1,0 +1,34 @@
+Retrieval-Augmented Generation (RAG)
+
+Definition
+
+RAG is an AI architecture that combines document retrieval with a Large Language Model (LLM) to generate accurate, context-aware answers.
+
+How it Works
+
+1. User enters a query.
+2. Relevant documents are retrieved.
+3. Retrieved documents are passed to the LLM.
+4. The LLM generates an answer using the provided context.
+
+Key Points
+
+• Reduces hallucinations.
+• Uses external knowledge.
+• Improves answer accuracy.
+• Supports up-to-date information.
+
+Applications
+
+• AI Chatbots
+• Enterprise Search
+• Customer Support
+• Document Question Answering
+
+Example
+
+Your Semantic Intent Search Engine is an example of a RAG system.
+
+Summary
+
+RAG improves AI responses by combining information retrieval with language generation.

@@ -1,0 +1,33 @@
+Convolutional Neural Network (CNN)
+
+Definition
+
+A Convolutional Neural Network (CNN) is a type of Deep Learning model designed to process image and video data. It automatically learns important features such as edges, shapes, and textures from images.
+
+How it Works
+
+A CNN processes an image using convolution layers to extract features, pooling layers to reduce dimensions, and fully connected layers to classify the image.
+
+Key Components
+
+• Convolution Layer
+• Activation Function (ReLU)
+• Pooling Layer
+• Fully Connected Layer
+• Output Layer
+
+Applications
+
+• Face recognition
+• Medical image analysis
+• Self-driving cars
+• Object detection
+• Image classification
+
+Example
+
+A CNN can identify whether an image contains a cat or a dog after training on thousands of labeled images.
+
+Summary
+
+CNNs are specialized neural networks that automatically extract image features, making them highly effective for computer vision tasks.

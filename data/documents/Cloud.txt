@@ -1,1 +1,39 @@
-Cloud Computing provides scalable computing resources.
+Cloud Computing
+
+Definition
+
+Cloud Computing is the delivery of computing services such as servers, storage, databases, networking, and software over the internet instead of using local hardware.
+
+How it Works
+
+Cloud providers maintain data centers that host computing resources. Users can access these resources on demand and pay only for what they use.
+
+Types
+
+• Public Cloud
+• Private Cloud
+• Hybrid Cloud
+
+Key Points
+
+• On-demand resource allocation
+• Scalable infrastructure
+• Cost-effective
+• High availability
+• Global accessibility
+
+Applications
+
+• Web Hosting
+• AI and Machine Learning
+• Data Storage
+• Backup and Recovery
+• Cloud Applications
+
+Example
+
+A company deploys its AI application on a cloud platform like AWS, Azure, or Google Cloud so users can access it from anywhere.
+
+Summary
+
+Cloud Computing provides flexible and scalable computing resources over the internet, reducing infrastructure costs and simplifying application deployment.

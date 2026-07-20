@@ -1,0 +1,36 @@
+Gated Recurrent Unit (GRU)
+
+Definition
+
+GRU is a simplified version of LSTM that uses fewer gates while achieving similar performance. It is faster to train and requires fewer computational resources.
+
+How it Works
+
+GRU contains two gates:
+
+• Update Gate
+• Reset Gate
+
+These gates control the flow of information and help the model remember useful data.
+
+Key Points
+
+• Simpler than LSTM.
+• Faster training.
+• Requires fewer parameters.
+• Performs well on many sequential tasks.
+
+Applications
+
+• Chatbots
+• Text generation
+• Speech recognition
+• Time-series prediction
+
+Example
+
+A chatbot can use a GRU model to generate meaningful responses based on previous conversation.
+
+Summary
+
+GRU offers an efficient alternative to LSTM while maintaining strong performance on sequence learning tasks.

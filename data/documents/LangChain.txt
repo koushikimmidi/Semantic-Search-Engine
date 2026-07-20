@@ -1,0 +1,32 @@
+LangChain
+
+Definition
+
+LangChain is a Python framework for building applications powered by Large Language Models.
+
+How it Works
+
+LangChain connects LLMs with external tools such as databases, APIs, documents, and memory.
+
+Key Components
+
+• LLMs
+• Prompts
+• Chains
+• Memory
+• Retrievers
+
+Applications
+
+• AI Chatbots
+• RAG Systems
+• AI Agents
+• Document Analysis
+
+Example
+
+A chatbot uses LangChain to retrieve information from PDFs before answering questions.
+
+Summary
+
+LangChain simplifies the development of intelligent AI applications by connecting language models with external resources.

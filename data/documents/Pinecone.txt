@@ -1,0 +1,31 @@
+Pinecone
+
+Definition
+
+Pinecone is a managed cloud-based vector database designed for storing and searching vector embeddings efficiently.
+
+How it Works
+
+Documents are converted into embeddings and stored in Pinecone. When a user submits a query, it is also converted into an embedding, and Pinecone retrieves the most similar vectors.
+
+Key Points
+
+• Fully managed cloud service.
+• Fast similarity search.
+• Scales automatically.
+• Easy integration with AI applications.
+
+Applications
+
+• Semantic Search
+• RAG Systems
+• Recommendation Systems
+• AI Assistants
+
+Example
+
+A customer support chatbot uses Pinecone to retrieve relevant support documents before generating an answer.
+
+Summary
+
+Pinecone is a cloud-native vector database that enables fast and scalable semantic search.

@@ -1,0 +1,30 @@
+Fine-Tuning
+
+Definition
+
+Fine-tuning is the process of training a pre-trained AI model on a specific dataset to improve its performance for a particular task.
+
+How it Works
+
+A pre-trained model is loaded and trained further using task-specific data while preserving its existing knowledge.
+
+Key Points
+
+• Uses pre-trained models
+• Requires less data than training from scratch
+• Improves task-specific performance
+
+Applications
+
+• Chatbots
+• Medical AI
+• Legal AI
+• Code Generation
+
+Example
+
+A language model is fine-tuned on medical documents to answer healthcare-related questions.
+
+Summary
+
+Fine-tuning adapts a general AI model to perform better in a specific domain.

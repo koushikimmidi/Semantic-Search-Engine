@@ -1,0 +1,31 @@
+Embeddings
+
+Definition
+
+Embeddings are numerical vector representations of text, images, or other data. They capture the semantic meaning of the data.
+
+How it Works
+
+An embedding model converts text into a vector. Similar texts produce vectors that are close together in vector space.
+
+Key Points
+
+• Represent semantic meaning.
+• Used for similarity search.
+• Essential for RAG systems.
+• Enable efficient vector retrieval.
+
+Applications
+
+• Semantic Search
+• Recommendation Systems
+• Document Retrieval
+• Question Answering
+
+Example
+
+The sentences "AI is amazing" and "Artificial Intelligence is powerful" produce similar embeddings.
+
+Summary
+
+Embeddings convert text into vectors, allowing computers to understand semantic similarity.

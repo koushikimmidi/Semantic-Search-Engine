@@ -1,0 +1,32 @@
+Gemma
+
+Definition
+
+Gemma is a family of open-source Large Language Models (LLMs) developed by Google. It is designed for text generation, question answering, summarization, and reasoning tasks.
+
+How it Works
+
+Gemma is based on the Transformer architecture. It predicts the next token in a sequence by understanding the context of the input prompt.
+
+Key Points
+
+• Developed by Google.
+• Open-weight language model.
+• Supports text generation and reasoning.
+• Can run locally using tools like Ollama.
+
+Applications
+
+• AI Chatbots
+• RAG Systems
+• Code Generation
+• Content Creation
+• Question Answering
+
+Example
+
+In your Semantic Intent Search Engine, Gemma receives the retrieved documents and generates a context-aware answer for the user's query.
+
+Summary
+
+Gemma is a powerful and efficient language model that can be integrated into AI applications to generate accurate and natural language responses.

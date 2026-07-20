@@ -1,0 +1,36 @@
+Long Short-Term Memory (LSTM)
+
+Definition
+
+LSTM is an improved version of the Recurrent Neural Network (RNN) that is designed to remember information for longer periods and overcome the vanishing gradient problem.
+
+How it Works
+
+LSTM uses memory cells and three gates:
+
+• Forget Gate
+• Input Gate
+• Output Gate
+
+These gates decide what information should be removed, stored, or passed to the next step.
+
+Key Points
+
+• Handles long-term dependencies.
+• Better than traditional RNNs.
+• Suitable for long text and time-series data.
+
+Applications
+
+• Language translation
+• Speech recognition
+• Stock price prediction
+• Weather forecasting
+
+Example
+
+Google Translate previously used LSTMs to translate long sentences accurately.
+
+Summary
+
+LSTM networks improve RNN performance by remembering important information over long sequences.

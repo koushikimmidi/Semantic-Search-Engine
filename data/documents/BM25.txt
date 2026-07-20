@@ -1,0 +1,30 @@
+BM25
+
+Definition
+
+BM25 is a keyword-based ranking algorithm widely used in search engines to rank documents according to their relevance to a query.
+
+How it Works
+
+BM25 calculates a relevance score based on term frequency, inverse document frequency, and document length.
+
+Key Points
+
+• Fast keyword search.
+• Does not understand meaning.
+• Commonly used with semantic search.
+• Excellent for exact matches.
+
+Applications
+
+• Search Engines
+• Document Retrieval
+• Hybrid Search
+
+Example
+
+A search for "Python programming" ranks documents containing those keywords higher.
+
+Summary
+
+BM25 is a reliable keyword retrieval algorithm that is often combined with semantic search for better results.

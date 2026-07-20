@@ -1,0 +1,31 @@
+Amazon Web Services (AWS)
+
+Definition
+
+AWS is a cloud computing platform provided by Amazon that offers computing, storage, databases, and AI services.
+
+How it Works
+
+Users create cloud resources such as virtual machines, storage buckets, and databases, paying only for the resources they use.
+
+Key Points
+
+• On-demand cloud services
+• Scalable infrastructure
+• Global data centers
+• Pay-as-you-go pricing
+
+Applications
+
+• Web Hosting
+• AI Applications
+• Data Storage
+• Cloud Deployment
+
+Example
+
+A company deploys its FastAPI application on an AWS EC2 instance.
+
+Summary
+
+AWS provides scalable cloud infrastructure for modern applications and AI systems.

@@ -1,0 +1,30 @@
+LoRA (Low-Rank Adaptation)
+
+Definition
+
+LoRA is a technique for fine-tuning large language models efficiently by training only a small number of additional parameters.
+
+How it Works
+
+Instead of updating all model weights, LoRA adds small trainable matrices while keeping the original model unchanged.
+
+Key Points
+
+• Efficient fine-tuning
+• Lower memory usage
+• Faster training
+• Suitable for large models
+
+Applications
+
+• LLM Fine-Tuning
+• Domain Adaptation
+• AI Research
+
+Example
+
+A Gemma model is adapted for customer support using LoRA.
+
+Summary
+
+LoRA enables efficient fine-tuning of large AI models with reduced computational requirements.

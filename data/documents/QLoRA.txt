@@ -1,0 +1,30 @@
+QLoRA (Quantized Low-Rank Adaptation)
+
+Definition
+
+QLoRA extends LoRA by combining low-rank adaptation with model quantization, allowing large language models to be fine-tuned using less memory.
+
+How it Works
+
+The base model is stored in a quantized format while LoRA layers are trained on top of it.
+
+Key Points
+
+• Memory efficient
+• Supports consumer GPUs
+• Faster than full fine-tuning
+• Maintains high accuracy
+
+Applications
+
+• LLM Fine-Tuning
+• Research
+• AI Development
+
+Example
+
+A 7-billion parameter language model can be fine-tuned on a single GPU using QLoRA.
+
+Summary
+
+QLoRA makes fine-tuning large language models more accessible by reducing hardware requirements.

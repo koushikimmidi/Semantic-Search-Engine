@@ -1,0 +1,38 @@
+Machine Learning (ML)
+
+Definition
+
+Machine Learning is a subset of Artificial Intelligence that enables computers to learn patterns from data and make predictions or decisions without being explicitly programmed.
+
+How it Works
+
+A Machine Learning model is trained using historical data. During training, the model identifies relationships between input features and outputs. Once trained, it can predict results for new, unseen data.
+
+Types
+
+• Supervised Learning – Uses labeled data for prediction.
+• Unsupervised Learning – Finds hidden patterns in unlabeled data.
+• Reinforcement Learning – Learns by interacting with an environment using rewards and penalties.
+
+Key Points
+
+• Learns from data instead of fixed rules.
+• Requires quality data for better accuracy.
+• Used for prediction, classification, and recommendation.
+• Improves performance as more data becomes available.
+
+Applications
+
+• Email spam detection
+• Product recommendations
+• Fraud detection
+• Medical diagnosis
+• Stock price prediction
+
+Example
+
+Netflix recommends movies based on your viewing history using Machine Learning algorithms.
+
+Summary
+
+Machine Learning allows computers to learn from data and make intelligent decisions. It forms the foundation of many modern AI applications.

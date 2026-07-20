@@ -1,0 +1,31 @@
+BERT (Bidirectional Encoder Representations from Transformers)
+
+Definition
+
+BERT is a Transformer-based language model developed by Google. It understands the meaning of words by considering both the left and right context of a sentence.
+
+How it Works
+
+BERT is pre-trained on a large text corpus using Masked Language Modeling (MLM) and Next Sentence Prediction (NSP). It can then be fine-tuned for tasks like text classification and question answering.
+
+Key Points
+
+• Developed by Google.
+• Uses only the Transformer Encoder.
+• Understands bidirectional context.
+• Produces contextual word embeddings.
+
+Applications
+
+• Question Answering
+• Sentiment Analysis
+• Named Entity Recognition
+• Search Engines
+
+Example
+
+In the sentence "He went to the bank to deposit money," BERT understands that "bank" refers to a financial institution.
+
+Summary
+
+BERT is a powerful language model that understands the context of words, improving the accuracy of many NLP tasks.

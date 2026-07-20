@@ -1,0 +1,31 @@
+Prompt Engineering
+
+Definition
+
+Prompt Engineering is the practice of designing effective prompts to guide an AI model toward producing accurate and useful responses.
+
+How it Works
+
+A prompt provides instructions or context to the language model. Better prompts generally lead to more relevant and reliable outputs.
+
+Key Points
+
+• Clear prompts improve results.
+• Include context whenever possible.
+• Use examples for complex tasks.
+• Refine prompts through experimentation.
+
+Applications
+
+• AI Chatbots
+• Code Generation
+• Content Creation
+• Question Answering
+
+Example
+
+Prompt: "Explain Machine Learning with a real-life example."
+
+Summary
+
+Prompt Engineering helps users communicate effectively with AI models to obtain high-quality responses.

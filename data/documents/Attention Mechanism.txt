@@ -1,0 +1,32 @@
+Attention Mechanism
+
+Definition
+
+The Attention Mechanism is a Deep Learning technique that allows a model to focus on the most relevant parts of the input while making predictions.
+
+How it Works
+
+For every input token, the model calculates attention scores to determine which other tokens are important. Higher scores mean greater influence during prediction.
+
+Key Points
+
+• Improves context understanding.
+• Handles long sequences efficiently.
+• Core component of Transformer models.
+• Enables parallel processing.
+
+Applications
+
+• Machine translation
+• Chatbots
+• Text summarization
+• Question answering
+• Image captioning
+
+Example
+
+In the sentence "The cat sat on the mat because it was tired," attention helps the model understand that "it" refers to "the cat."
+
+Summary
+
+The Attention Mechanism allows AI models to focus on relevant information, significantly improving language understanding and generation.

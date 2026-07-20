@@ -1,0 +1,31 @@
+Kubernetes
+
+Definition
+
+Kubernetes is an open-source platform used to deploy, manage, and scale containerized applications.
+
+How it Works
+
+Kubernetes organizes containers into pods, distributes workloads across servers, and automatically restarts failed containers.
+
+Key Points
+
+• Container orchestration.
+• Automatic scaling.
+• Load balancing.
+• High availability.
+
+Applications
+
+• Cloud Applications
+• Microservices
+• AI Platforms
+• Enterprise Systems
+
+Example
+
+A company deploys hundreds of Docker containers across multiple servers using Kubernetes.
+
+Summary
+
+Kubernetes automates the deployment and management of containerized applications, making large-scale systems more reliable.

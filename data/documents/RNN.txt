@@ -1,0 +1,32 @@
+Recurrent Neural Network (RNN)
+
+Definition
+
+A Recurrent Neural Network (RNN) is a type of neural network designed to process sequential data. It remembers previous inputs using an internal memory, making it suitable for tasks where order matters.
+
+How it Works
+
+Unlike traditional neural networks, an RNN passes information from one time step to the next. This allows it to learn patterns in sequences.
+
+Key Points
+
+• Processes sequential data.
+• Maintains memory of previous inputs.
+• Suitable for text, speech, and time-series data.
+• Struggles with long sequences due to the vanishing gradient problem.
+
+Applications
+
+• Language translation
+• Text generation
+• Speech recognition
+• Sentiment analysis
+• Time-series forecasting
+
+Example
+
+An RNN predicts the next word in a sentence by considering the previous words.
+
+Summary
+
+RNNs are designed for sequential data but are limited when handling very long sequences.

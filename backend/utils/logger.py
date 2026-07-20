@@ -1,29 +1,69 @@
 import logging
+import os
+
+from backend.config import Settings
 
 
 class ProjectLogger:
 
-    @staticmethod
-    def get_logger():
+    _logger = None
 
-        logger = logging.getLogger("SemanticSearch")
+    @classmethod
+    def get_logger(cls):
 
-        if not logger.handlers:
+        if cls._logger is not None:
+            return cls._logger
 
-            logger.setLevel(logging.INFO)
+        os.makedirs(
+            "logs",
+            exist_ok=True
+        )
 
-            formatter = logging.Formatter(
-                "[%(levelname)s] %(message)s"
+        logger = logging.getLogger(
+            Settings.PROJECT_NAME
+        )
+
+        logger.setLevel(
+            getattr(
+                logging,
+                Settings.LOG_LEVEL.upper(),
+                logging.INFO
             )
+        )
 
-            console_handler = logging.StreamHandler()
+        logger.handlers.clear()
 
-            console_handler.setFormatter(
-                formatter
-            )
+        formatter = logging.Formatter(
 
-            logger.addHandler(
-                console_handler
-            )
+            "%(asctime)s | %(levelname)s | %(message)s",
+
+            "%Y-%m-%d %H:%M:%S"
+
+        )
+
+        # ---------------- Console ----------------
+
+        console = logging.StreamHandler()
+
+        console.setFormatter(
+            formatter
+        )
+
+        # ---------------- File ----------------
+
+        file_handler = logging.FileHandler(
+            "logs/application.log",
+            encoding="utf-8"
+        )
+
+        file_handler.setFormatter(
+            formatter
+        )
+
+        logger.addHandler(console)
+
+        logger.addHandler(file_handler)
+
+        cls._logger = logger
 
         return logger

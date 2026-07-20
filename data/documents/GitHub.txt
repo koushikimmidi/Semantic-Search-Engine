@@ -1,0 +1,30 @@
+GitHub
+
+Definition
+
+GitHub is a cloud-based platform that hosts Git repositories and provides collaboration tools for developers.
+
+How it Works
+
+Developers push their Git repositories to GitHub, where they can manage code, review changes, and collaborate through pull requests.
+
+Key Points
+
+• Cloud-based Git hosting
+• Pull Requests
+• Issues and Discussions
+• GitHub Actions for CI/CD
+
+Applications
+
+• Open Source Projects
+• Team Collaboration
+• Portfolio Hosting
+
+Example
+
+A developer stores their AI project on GitHub to share it with recruiters.
+
+Summary
+
+GitHub makes software development collaborative by combining Git with cloud-based project management tools.

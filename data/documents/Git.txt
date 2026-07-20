@@ -1,0 +1,38 @@
+Git
+
+Definition
+
+Git is a distributed version control system used to track changes in source code during software development.
+
+How it Works
+
+Git stores snapshots of files called commits. Developers can create branches, merge changes, and maintain project history.
+
+Key Points
+
+• Distributed version control
+• Tracks code changes
+• Supports branching and merging
+• Enables team collaboration
+
+Common Commands
+
+• git init
+• git add
+• git commit
+• git push
+• git pull
+
+Applications
+
+• Software Development
+• Version Control
+• Team Collaboration
+
+Example
+
+Developers use Git to save project changes and collaborate without overwriting each other's work.
+
+Summary
+
+Git is an essential tool for managing source code and collaborating on software projects.

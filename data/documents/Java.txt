@@ -1,0 +1,31 @@
+Java
+
+Definition
+
+Java is an object-oriented programming language designed to build secure, portable, and scalable applications.
+
+How it Works
+
+Java source code is compiled into bytecode, which runs on the Java Virtual Machine (JVM). This allows Java programs to run on different operating systems.
+
+Key Points
+
+• Platform independent
+• Object-oriented
+• Strong memory management
+• High performance
+
+Applications
+
+• Enterprise Applications
+• Android Development
+• Web Applications
+• Banking Systems
+
+Example
+
+Many enterprise software systems and Android applications are developed using Java.
+
+Summary
+
+Java is a reliable programming language widely used for enterprise software and large-scale applications.

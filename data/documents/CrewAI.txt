@@ -1,0 +1,31 @@
+CrewAI
+
+Definition
+
+CrewAI is a framework for building AI systems where multiple AI agents work together to complete tasks.
+
+How it Works
+
+Each AI agent has a specific role, such as researcher, writer, or reviewer. Agents collaborate to solve complex problems.
+
+Key Points
+
+• Multi-agent architecture.
+• Role-based task assignment.
+• Supports collaboration.
+• Improves task efficiency.
+
+Applications
+
+• Research Automation
+• Business Workflows
+• Content Generation
+• Software Development
+
+Example
+
+One agent gathers information, another writes the report, and a third reviews the final output.
+
+Summary
+
+CrewAI enables multiple AI agents to collaborate and solve complex tasks efficiently.

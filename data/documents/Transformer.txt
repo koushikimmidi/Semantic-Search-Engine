@@ -1,0 +1,34 @@
+Transformers
+
+Definition
+
+Transformers are Deep Learning models designed to process sequential data using the attention mechanism instead of recurrence. They are the foundation of modern Large Language Models (LLMs).
+
+How it Works
+
+A transformer processes all input tokens simultaneously. Using self-attention, it determines how each word relates to every other word in the sequence.
+
+Key Components
+
+• Encoder
+• Decoder
+• Self-Attention
+• Multi-Head Attention
+• Feed Forward Network
+• Positional Encoding
+
+Applications
+
+• ChatGPT
+• Google Translate
+• Text summarization
+• Question answering
+• Code generation
+
+Example
+
+ChatGPT uses the Transformer architecture to understand questions and generate responses.
+
+Summary
+
+Transformers revolutionized Natural Language Processing by enabling faster training and better understanding of long-range relationships in text.

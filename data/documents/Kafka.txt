@@ -1,0 +1,31 @@
+Apache Kafka
+
+Definition
+
+Apache Kafka is a distributed event streaming platform used to process and transfer large volumes of real-time data.
+
+How it Works
+
+Applications publish messages to Kafka topics, and consumers subscribe to those topics to receive the messages.
+
+Key Points
+
+• High throughput
+• Fault tolerant
+• Distributed architecture
+• Real-time data processing
+
+Applications
+
+• Log Processing
+• Financial Transactions
+• IoT Systems
+• Data Pipelines
+
+Example
+
+An online shopping platform streams order events through Kafka for inventory updates.
+
+Summary
+
+Kafka enables reliable and scalable real-time data streaming between applications.

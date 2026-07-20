@@ -1,0 +1,31 @@
+Milvus
+
+Definition
+
+Milvus is an open-source vector database designed for managing and searching large collections of embeddings.
+
+How it Works
+
+Milvus indexes vector embeddings and performs similarity searches using optimized indexing algorithms.
+
+Key Points
+
+• Open-source.
+• Highly scalable.
+• Supports millions of vectors.
+• Integrates with AI frameworks.
+
+Applications
+
+• Image Search
+• Semantic Search
+• Recommendation Systems
+• RAG Applications
+
+Example
+
+A document search engine uses Milvus to retrieve documents with similar meanings.
+
+Summary
+
+Milvus provides high-performance vector storage and retrieval for AI applications.

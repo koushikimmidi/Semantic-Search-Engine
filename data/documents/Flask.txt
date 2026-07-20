@@ -1,0 +1,31 @@
+Flask
+
+Definition
+
+Flask is a lightweight Python web framework used to build web applications and APIs. It is simple, flexible, and easy to learn.
+
+How it Works
+
+Flask maps URLs to Python functions called routes. When a user sends a request, the corresponding function processes it and returns a response.
+
+Key Points
+
+• Lightweight framework
+• Easy to learn
+• Flexible architecture
+• Large community support
+
+Applications
+
+• Web Applications
+• REST APIs
+• Dashboards
+• Small Projects
+
+Example
+
+A personal portfolio website can be built using Flask.
+
+Summary
+
+Flask is a simple and flexible framework suitable for beginners and small to medium-sized applications.

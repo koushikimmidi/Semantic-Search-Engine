@@ -1,0 +1,31 @@
+PostgreSQL
+
+Definition
+
+PostgreSQL is an open-source relational database management system known for reliability, advanced features, and SQL compliance.
+
+How it Works
+
+Data is stored in tables and accessed using SQL queries. PostgreSQL supports transactions, indexing, and advanced data types.
+
+Key Points
+
+• Open source
+• ACID compliant
+• Highly reliable
+• Supports complex queries
+
+Applications
+
+• Enterprise Applications
+• Banking Systems
+• Analytics
+• Web Applications
+
+Example
+
+An e-commerce application stores customer and order information in PostgreSQL.
+
+Summary
+
+PostgreSQL is a powerful relational database suitable for applications requiring reliability and scalability.

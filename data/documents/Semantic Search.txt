@@ -1,0 +1,31 @@
+Semantic Search
+
+Definition
+
+Semantic Search retrieves information based on meaning rather than exact keyword matching.
+
+How it Works
+
+User queries and documents are converted into embeddings. Similar vectors are retrieved using vector search algorithms.
+
+Key Points
+
+• Understands user intent.
+• Finds conceptually similar documents.
+• Uses embeddings instead of keywords.
+• Improves search accuracy.
+
+Applications
+
+• AI Search Engines
+• RAG Systems
+• Enterprise Search
+• Knowledge Bases
+
+Example
+
+Searching for "car" can also retrieve documents containing "automobile."
+
+Summary
+
+Semantic Search improves information retrieval by understanding the meaning of text.

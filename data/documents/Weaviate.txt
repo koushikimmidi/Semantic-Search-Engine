@@ -1,0 +1,31 @@
+Weaviate
+
+Definition
+
+Weaviate is an open-source vector database that combines vector search with structured data storage.
+
+How it Works
+
+It stores document embeddings along with metadata, allowing both semantic and filtered searches.
+
+Key Points
+
+• Open-source.
+• Supports GraphQL APIs.
+• Stores vectors and metadata.
+• Built for AI applications.
+
+Applications
+
+• Knowledge Bases
+• Semantic Search
+• Enterprise Search
+• AI Chatbots
+
+Example
+
+A company knowledge base uses Weaviate to search documents by meaning and department.
+
+Summary
+
+Weaviate combines vector search with structured data, making it ideal for enterprise AI systems.

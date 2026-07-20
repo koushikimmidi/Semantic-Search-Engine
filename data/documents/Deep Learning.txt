@@ -1,0 +1,32 @@
+Deep Learning
+
+Definition
+
+Deep Learning is a subset of Machine Learning that uses artificial neural networks with multiple hidden layers to learn complex patterns from large amounts of data.
+
+How it Works
+
+A Deep Learning model receives input data, processes it through multiple hidden layers, and generates predictions. Each layer extracts more complex features than the previous one.
+
+Key Points
+
+• Uses deep neural networks.
+• Performs automatic feature extraction.
+• Requires large datasets and powerful GPUs.
+• Produces high accuracy for complex tasks.
+
+Applications
+
+• Image recognition
+• Speech recognition
+• Natural Language Processing
+• Self-driving cars
+• Medical image analysis
+
+Example
+
+Face Unlock on smartphones uses Deep Learning to recognize a user's face.
+
+Summary
+
+Deep Learning is a powerful Machine Learning technique capable of solving complex problems involving images, text, speech, and videos.

@@ -1,0 +1,32 @@
+GPT (Generative Pre-trained Transformer)
+
+Definition
+
+GPT is a family of Transformer-based language models developed by OpenAI. It generates human-like text by predicting the next word in a sequence.
+
+How it Works
+
+GPT is pre-trained on large text datasets using next-word prediction. During inference, it generates text one token at a time based on the previous context.
+
+Key Points
+
+• Uses only the Transformer Decoder.
+• Excellent for text generation.
+• Supports conversation, coding, and summarization.
+• Powers applications like ChatGPT.
+
+Applications
+
+• Chatbots
+• Code Generation
+• Content Writing
+• Translation
+• Question Answering
+
+Example
+
+ChatGPT uses GPT models to generate natural and context-aware responses.
+
+Summary
+
+GPT is one of the most widely used language models for generating high-quality text across various applications.

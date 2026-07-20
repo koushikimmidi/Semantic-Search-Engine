@@ -1,0 +1,31 @@
+Cross Encoder
+
+Definition
+
+A Cross Encoder is a deep learning model used to rerank search results by evaluating the relationship between a query and a document together.
+
+How it Works
+
+Unlike embedding models that encode the query and document separately, a Cross Encoder processes both simultaneously. It analyzes their interaction and assigns a relevance score.
+
+Key Points
+
+• Produces highly accurate relevance scores.
+• Used after document retrieval.
+• Slower than embedding models.
+• Improves search quality.
+
+Applications
+
+• Semantic Search
+• RAG Systems
+• Question Answering
+• Search Engines
+
+Example
+
+In a RAG system, FAISS retrieves the top 10 documents. The Cross Encoder reranks them and selects the most relevant ones before sending them to the language model.
+
+Summary
+
+Cross Encoders improve retrieval accuracy by carefully evaluating the relationship between a query and retrieved documents, making them an important component of modern RAG systems.

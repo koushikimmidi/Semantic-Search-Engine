@@ -1,0 +1,30 @@
+LangGraph
+
+Definition
+
+LangGraph is an extension of LangChain used to build stateful and multi-step AI workflows using graphs.
+
+How it Works
+
+Tasks are represented as nodes, and the execution flow is represented as edges connecting these nodes.
+
+Key Points
+
+• Supports complex workflows.
+• Maintains conversation state.
+• Enables multi-agent systems.
+• Handles branching logic.
+
+Applications
+
+• AI Assistants
+• Workflow Automation
+• Multi-Agent Systems
+
+Example
+
+An AI research assistant can use LangGraph to search documents, summarize results, and generate a final report.
+
+Summary
+
+LangGraph helps developers create advanced AI workflows with multiple connected steps.

@@ -1,0 +1,31 @@
+Sentence Transformers
+
+Definition
+
+Sentence Transformers are models that generate embeddings for entire sentences or paragraphs instead of individual words.
+
+How it Works
+
+The model processes the input sentence and produces a fixed-length vector representing its meaning.
+
+Key Points
+
+• Generates sentence-level embeddings.
+• Faster than comparing raw text.
+• Supports semantic similarity.
+• Commonly used with FAISS.
+
+Applications
+
+• Semantic Search
+• Duplicate Detection
+• Question Answering
+• Document Clustering
+
+Example
+
+Sentence Transformers help find documents with similar meanings even if different words are used.
+
+Summary
+
+Sentence Transformers create meaningful sentence embeddings that improve semantic search and retrieval.

@@ -1,0 +1,31 @@
+Microsoft Azure
+
+Definition
+
+Microsoft Azure is a cloud computing platform that provides services for building, deploying, and managing applications.
+
+How it Works
+
+Azure offers virtual machines, databases, AI services, storage, and networking through cloud infrastructure.
+
+Key Points
+
+• Cloud platform by Microsoft
+• Supports AI and Machine Learning
+• Enterprise-ready services
+• Global infrastructure
+
+Applications
+
+• Enterprise Applications
+• AI Development
+• Cloud Hosting
+• Data Analytics
+
+Example
+
+Organizations deploy business applications and AI services using Azure.
+
+Summary
+
+Azure enables businesses to build secure and scalable cloud-based applications.

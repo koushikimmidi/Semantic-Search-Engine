@@ -1,0 +1,31 @@
+RabbitMQ
+
+Definition
+
+RabbitMQ is a message broker that enables applications to communicate by sending and receiving messages through queues.
+
+How it Works
+
+A producer sends a message to a queue, and a consumer receives and processes it asynchronously.
+
+Key Points
+
+• Message queuing
+• Reliable communication
+• Asynchronous processing
+• Easy integration
+
+Applications
+
+• Microservices
+• Background Tasks
+• Notification Systems
+• Order Processing
+
+Example
+
+An e-commerce website sends email notifications through RabbitMQ without slowing down the main application.
+
+Summary
+
+RabbitMQ provides reliable message delivery and helps applications communicate efficiently using queues.

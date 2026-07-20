@@ -1,0 +1,31 @@
+Docker
+
+Definition
+
+Docker is a containerization platform that packages applications and their dependencies into lightweight containers.
+
+How it Works
+
+A Docker image contains the application and its required libraries. Running the image creates a container that behaves the same across different environments.
+
+Key Points
+
+• Portable applications.
+• Consistent environments.
+• Faster deployment.
+• Simplifies dependency management.
+
+Applications
+
+• Software Deployment
+• Microservices
+• Cloud Computing
+• AI Applications
+
+Example
+
+Your Semantic Intent Search Engine runs inside a Docker container to ensure consistent execution.
+
+Summary
+
+Docker makes application deployment reliable by packaging everything needed to run software into containers.

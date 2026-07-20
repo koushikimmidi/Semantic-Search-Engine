@@ -1,0 +1,31 @@
+Google Cloud Platform (GCP)
+
+Definition
+
+Google Cloud Platform is Google's cloud computing service that provides infrastructure, storage, AI tools, and data analytics services.
+
+How it Works
+
+Developers deploy applications on Google-managed infrastructure using services such as Compute Engine, Cloud Storage, and Vertex AI.
+
+Key Points
+
+• Cloud infrastructure
+• AI and Machine Learning services
+• Global network
+• Scalable resources
+
+Applications
+
+• Cloud Hosting
+• AI Applications
+• Data Analytics
+• Kubernetes Deployment
+
+Example
+
+A machine learning application is deployed on Google Cloud using Vertex AI.
+
+Summary
+
+Google Cloud provides scalable cloud infrastructure and advanced AI services for developers and businesses.

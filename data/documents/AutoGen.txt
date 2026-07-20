@@ -1,0 +1,31 @@
+AutoGen
+
+Definition
+
+AutoGen is an open-source framework developed by Microsoft for creating conversational AI agents that work together.
+
+How it Works
+
+Multiple agents communicate with each other, exchange information, and collaboratively solve problems.
+
+Key Points
+
+• Developed by Microsoft.
+• Supports multi-agent conversations.
+• Extensible and customizable.
+• Integrates with LLMs.
+
+Applications
+
+• AI Coding Assistants
+• Research Automation
+• Customer Support
+• Workflow Automation
+
+Example
+
+An AI coding assistant uses multiple agents to write, test, and review code.
+
+Summary
+
+AutoGen provides a powerful framework for building collaborative AI agent systems.

@@ -1,0 +1,31 @@
+MongoDB
+
+Definition
+
+MongoDB is a NoSQL database that stores data as flexible JSON-like documents instead of tables.
+
+How it Works
+
+Data is stored in collections, and each document can have a different structure, making MongoDB flexible for changing requirements.
+
+Key Points
+
+• NoSQL database
+• Document-oriented
+• Flexible schema
+• Horizontally scalable
+
+Applications
+
+• Content Management Systems
+• Real-time Applications
+• AI Applications
+• IoT Systems
+
+Example
+
+A social media platform stores user posts as MongoDB documents.
+
+Summary
+
+MongoDB is a flexible NoSQL database ideal for applications with dynamic or unstructured data.

@@ -7,6 +7,11 @@ class GemmaLLM:
 
         self.model = "gemma4:latest"
 
+        # Connect to Ollama running on the host machine
+        self.client = ollama.Client(
+            host="http://host.docker.internal:11434"
+        )
+
     def generate(
         self,
         query,
@@ -37,7 +42,7 @@ Answer
 --------
 """
 
-        response = ollama.chat(
+        response = self.client.chat(
 
             model=self.model,
 

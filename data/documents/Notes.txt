@@ -1,0 +1,52 @@
+Artificial Intelligence Notes
+
+Overview
+
+This knowledge base contains important concepts related to Artificial Intelligence, Machine Learning, Deep Learning, Natural Language Processing, Retrieval-Augmented Generation (RAG), cloud computing, databases, and software development.
+
+Purpose
+
+The documents are designed to improve semantic search and provide high-quality context for Large Language Models in a RAG pipeline.
+
+Topics Covered
+
+• Artificial Intelligence
+• Machine Learning
+• Deep Learning
+• Neural Networks
+• CNN
+• RNN
+• LSTM
+• Transformers
+• Attention Mechanism
+• BERT
+• GPT
+• Large Language Models
+• Embeddings
+• Sentence Transformers
+• BM25
+• FAISS
+• Vector Databases
+• RAG
+• LangChain
+• Docker
+• FastAPI
+• Kubernetes
+• SQL
+• MongoDB
+• Redis
+• Cloud Computing
+
+Applications
+
+These notes can be used for:
+
+• Learning AI concepts
+• Interview preparation
+• Building RAG applications
+• Semantic Search
+• Academic reference
+
+Summary
+
+This collection serves as a compact AI knowledge base for learning, searching, and answering technical questions using Retrieval-Augmented Generation systems.
