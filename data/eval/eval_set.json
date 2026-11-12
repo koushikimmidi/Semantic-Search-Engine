@@ -1,0 +1,57 @@
+[
+    {"query": "How many days do I have to ask for a refund?", "intent": "REFUND", "answerable": true},
+    {"query": "Which situations make a course non-refundable?", "intent": "REFUND", "answerable": true},
+    {"query": "I finished the course last week, can I still get reimbursed?", "intent": "REFUND", "answerable": true},
+    {"query": "After approval how soon does the refund reach me?", "intent": "REFUND", "answerable": true},
+    {"query": "What details should I include in my refund request?", "intent": "REFUND", "answerable": true},
+
+    {"query": "Can I back out of a course before enrolling?", "intent": "CANCELLATION", "answerable": true},
+    {"query": "What happens if I cancel once the refund window has passed?", "intent": "CANCELLATION", "answerable": true},
+    {"query": "I'd like to withdraw from the data structures course", "intent": "CANCELLATION", "answerable": true},
+
+    {"query": "The link to set a new password never showed up in my email", "intent": "PASSWORD_RESET", "answerable": true},
+    {"query": "Steps to change a forgotten password?", "intent": "PASSWORD_RESET", "answerable": true},
+    {"query": "My reset link says it has expired", "intent": "PASSWORD_RESET", "answerable": true},
+
+    {"query": "It says my account has been locked after several attempts", "intent": "ACCOUNT_LOGIN", "answerable": true},
+    {"query": "I typed the right password but the site will not let me in", "intent": "ACCOUNT_LOGIN", "answerable": true},
+    {"query": "How do I change the email address on my account?", "intent": "ACCOUNT_LOGIN", "answerable": true},
+
+    {"query": "Money got deducted yet the course does not appear", "intent": "PAYMENT", "answerable": true},
+    {"query": "I paid two times for the same course by mistake", "intent": "PAYMENT", "answerable": true},
+    {"query": "What payment options can I use?", "intent": "PAYMENT", "answerable": true},
+    {"query": "The checkout keeps failing when I pay", "intent": "PAYMENT", "answerable": true},
+    {"query": "Do you offer a student discount code?", "intent": "PAYMENT", "answerable": false},
+
+    {"query": "How long can I keep using a course after enrolling?", "intent": "COURSE_ACCESS", "answerable": true},
+    {"query": "Can I open my course on my phone and laptop both?", "intent": "COURSE_ACCESS", "answerable": true},
+    {"query": "My access ran out, can it be extended?", "intent": "COURSE_ACCESS", "answerable": true},
+    {"query": "I enrolled but the course is missing from my dashboard", "intent": "COURSE_ACCESS", "answerable": true},
+
+    {"query": "What do I need to complete to receive a certificate?", "intent": "CERTIFICATE", "answerable": true},
+    {"query": "There is a spelling mistake in my name on the certificate", "intent": "CERTIFICATE", "answerable": true},
+    {"query": "Can a lost certificate be reissued?", "intent": "CERTIFICATE", "answerable": true},
+    {"query": "Is my certificate accredited by a university?", "intent": "CERTIFICATE", "answerable": false},
+
+    {"query": "Lessons stop playing halfway through", "intent": "TECHNICAL_SUPPORT", "answerable": true},
+    {"query": "The video just shows a black screen", "intent": "TECHNICAL_SUPPORT", "answerable": true},
+    {"query": "What should I try if a lecture will not start?", "intent": "TECHNICAL_SUPPORT", "answerable": true},
+
+    {"query": "What will I build in the Python Basics course?", "intent": "COURSE_INFORMATION", "answerable": true},
+    {"query": "What is the prerequisite for the machine learning course?", "intent": "COURSE_INFORMATION", "answerable": true},
+    {"query": "Does the web development course cover databases?", "intent": "COURSE_INFORMATION", "answerable": true},
+    {"query": "What final project is in the data structures course?", "intent": "COURSE_INFORMATION", "answerable": true},
+    {"query": "Is there a live class schedule for the ML course?", "intent": "COURSE_INFORMATION", "answerable": false},
+
+    {"query": "Can I learn at my own speed?", "intent": "GENERAL_FAQ", "answerable": true},
+    {"query": "How do I enroll in a course?", "intent": "GENERAL_FAQ", "answerable": true},
+    {"query": "Do you have scholarships for low income students?", "intent": "GENERAL_FAQ", "answerable": false},
+    {"query": "Are classes available in Hindi?", "intent": "GENERAL_FAQ", "answerable": false},
+
+    {"query": "What is the capital of Australia?", "intent": "UNKNOWN", "answerable": false},
+    {"query": "Write a haiku about autumn", "intent": "UNKNOWN", "answerable": false},
+    {"query": "Who is the best cricket player ever?", "intent": "UNKNOWN", "answerable": false},
+    {"query": "How do I bake chocolate cookies?", "intent": "UNKNOWN", "answerable": false},
+    {"query": "What's the exchange rate from dollars to rupees?", "intent": "UNKNOWN", "answerable": false},
+    {"query": "Suggest a holiday destination in Europe", "intent": "UNKNOWN", "answerable": false}
+]

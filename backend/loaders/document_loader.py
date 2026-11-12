@@ -33,3 +33,18 @@ class DocumentLoader:
 
         else:
             raise ValueError(f"Unsupported file type: {extension}")
+
+    def load_pages(self, file_path):
+        """
+        Return [(page_number, text), ...].
+
+        PDFs keep their real page numbers; other formats have no
+        pages, so the whole document is page 1.
+        """
+
+        extension = os.path.splitext(file_path)[1].lower()
+
+        if extension == ".pdf":
+            return self.pdf_loader.load_pages(file_path)
+
+        return [(1, self.load(file_path))]

@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { listDocuments } from "../services/api";
+import { listDocuments, getAuthInfo, getApiKey, setApiKey } from "../services/api";
 import "../styles/sidebar.css";
 
 function Sidebar({
@@ -12,10 +12,43 @@ function Sidebar({
     activeHistoryId,
     onSelectHistory,
     onDeleteHistory,
-    onClearHistory
+    onClearHistory,
+    onAuthChange
 }) {
     const [fileCount, setFileCount] = useState(0);
     const [status, setStatus] = useState("checking");
+    const [auth, setAuth] = useState(null);
+    const [keyOpen, setKeyOpen] = useState(false);
+    const [keyDraft, setKeyDraft] = useState("");
+
+    async function refreshAuth() {
+        try {
+            setAuth(await getAuthInfo());
+        } catch {
+            setAuth(null);
+        }
+    }
+
+    useEffect(() => {
+        const initial = setTimeout(refreshAuth, 0);
+        return () => clearTimeout(initial);
+    }, []);
+
+    function saveKey(event) {
+        event.preventDefault();
+        setApiKey(keyDraft.trim());
+        setKeyOpen(false);
+        refreshAuth();
+        if (onAuthChange) onAuthChange();
+    }
+
+    function clearKey() {
+        setApiKey("");
+        setKeyDraft("");
+        setKeyOpen(false);
+        refreshAuth();
+        if (onAuthChange) onAuthChange();
+    }
 
     // Fetch file count periodically to display in sidebar
     useEffect(() => {
@@ -123,6 +156,37 @@ function Sidebar({
             </div>
 
             <div className="sidebar-footer">
+                <div className="auth-box">
+                    <button
+                        className="auth-toggle"
+                        onClick={() => {
+                            setKeyDraft(getApiKey());
+                            setKeyOpen((open) => !open);
+                        }}
+                        title="Enter an agent or admin API key"
+                    >
+                        🔑 {auth
+                            ? (auth.auth_enabled ? `Role: ${auth.role}` : "Auth disabled")
+                            : "API key"}
+                    </button>
+
+                    {keyOpen && (
+                        <form className="auth-form" onSubmit={saveKey}>
+                            <input
+                                type="password"
+                                placeholder="X-API-Key"
+                                value={keyDraft}
+                                onChange={(e) => setKeyDraft(e.target.value)}
+                                autoComplete="off"
+                            />
+                            <div className="auth-actions">
+                                <button type="submit">Save</button>
+                                <button type="button" onClick={clearKey}>Clear</button>
+                            </div>
+                        </form>
+                    )}
+                </div>
+
                 <div className="status-indicator">
                     <span className={`status-dot ${status}`}></span>
                     <span className="status-text">

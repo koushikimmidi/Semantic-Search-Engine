@@ -1,17 +1,52 @@
+import os
+
+
+def _env_float(name, default):
+
+    try:
+        return float(os.getenv(name, default))
+    except (TypeError, ValueError):
+        return float(default)
+
+
 class ConfidenceEngine:
+    """
+    Decides AUTO_REPLY vs HUMAN_REVIEW from cross-encoder scores
+    (ms-marco logits), the LLM answer, and intent/evidence agreement.
+
+    Thresholds are tuned with `python -m scripts.evaluate_pipeline`
+    and can be overridden with CONFIDENCE_* environment variables.
+
+    Tuning (Nov 2026, eval_set.json, reranking on the original
+    question): the highest-scoring unanswerable question scored
+    -3.1, so auto replies need >= 3.0, or >= 0.5 with a clear lead
+    (gap >= 0.5) over the next source. Below -3.0 evidence is LOW.
+    """
 
     def __init__(
         self,
-        high_threshold=4.0,
-        very_high_threshold=5.0,
-        medium_threshold=0.0,
-        minimum_score_gap=0.5
+        high_threshold=None,
+        very_high_threshold=None,
+        medium_threshold=None,
+        minimum_score_gap=None
     ):
 
-        self.high_threshold = high_threshold
-        self.very_high_threshold = very_high_threshold
-        self.medium_threshold = medium_threshold
-        self.minimum_score_gap = minimum_score_gap
+        self.high_threshold = (
+            high_threshold if high_threshold is not None
+            else _env_float("CONFIDENCE_HIGH_THRESHOLD", 0.5)
+        )
+        self.very_high_threshold = (
+            very_high_threshold if very_high_threshold is not None
+            else _env_float("CONFIDENCE_VERY_HIGH_THRESHOLD", 3.0)
+        )
+        self.medium_threshold = (
+            medium_threshold if medium_threshold is not None
+            else _env_float("CONFIDENCE_MEDIUM_THRESHOLD", -3.0)
+        )
+        self.minimum_score_gap = (
+            minimum_score_gap if minimum_score_gap is not None
+            else _env_float("CONFIDENCE_MIN_SCORE_GAP", 0.5)
+        )
 
         # ----------------------------------------------------
         # Intent → Evidence keywords

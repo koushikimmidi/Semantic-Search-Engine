@@ -11,6 +11,8 @@ function App() {
 
   const [activeTab, setActiveTab] = useState("search");
   const [newSearchTrigger, setNewSearchTrigger] = useState(0);
+  // Bumped when the API key changes so data views reload.
+  const [authVersion, setAuthVersion] = useState(0);
 
   // Search History States
   const [history, setHistory] = useState(() => {
@@ -152,10 +154,12 @@ function App() {
         onSelectHistory={handleSelectHistory}
         onDeleteHistory={handleDeleteHistory}
         onClearHistory={handleClearHistory}
+        onAuthChange={() => setAuthVersion((v) => v + 1)}
       />
 
       <main className="main-content">
         <Home
+          authVersion={authVersion}
           activeTab={activeTab}
           newSearchTrigger={newSearchTrigger}
           selectedHistoryItem={selectedHistoryItem}

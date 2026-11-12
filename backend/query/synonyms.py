@@ -1,59 +1,66 @@
 class SynonymExpander:
+    """
+    Adds the wording used in the knowledge-base documents for the
+    words students typically use.
+    """
 
     def __init__(self):
 
         self.synonyms = {
 
-            "car": [
-                "automobile",
-                "vehicle"
-            ],
+            "refund": ["reimbursement"],
+            "money": ["refund"],
+            "reimbursement": ["refund"],
 
-            "student": [
-                "learner",
-                "pupil"
-            ],
+            "cancel": ["cancellation", "withdraw"],
+            "withdraw": ["cancellation"],
+            "unenroll": ["cancellation"],
 
-            "code": [
-                "program",
-                "software"
-            ],
+            "login": ["sign", "account"],
+            "signin": ["login"],
+            "locked": ["login", "account"],
 
-            "database": [
-                "db"
-            ],
+            "password": ["credentials"],
+            "forgot": ["reset"],
+            "forgotten": ["reset"],
 
-            "bug": [
-                "error",
-                "issue"
-            ],
+            "pay": ["payment"],
+            "paid": ["payment"],
+            "charged": ["payment", "transaction"],
+            "billing": ["payment", "invoice"],
+            "deducted": ["payment", "transaction"],
 
-            "ai": [
-                "artificial intelligence",
-                "machine intelligence"
-            ],
+            "certificate": ["certification"],
+            "certification": ["certificate"],
 
-            "python": [
-                "programming language"
-            ]
+            "video": ["playback", "lecture"],
+            "lecture": ["video"],
+            "buffering": ["playback", "video"],
+
+            "enroll": ["enrollment", "registration"],
+            "enrol": ["enrollment"],
+            "register": ["enrollment"],
+            "registration": ["enrollment"],
+
+            "access": ["unlock"],
+            "expire": ["expiry", "validity"],
+            "expired": ["expiry", "validity"],
+
+            "error": ["issue", "problem"],
+            "bug": ["error", "issue"],
+            "broken": ["issue", "problem"],
+
+            "student": ["learner"]
         }
 
     def expand(self, query):
 
-        words = query.split()
-
         expanded = []
 
-        for word in words:
+        for word in query.split():
 
             expanded.append(word)
 
-            key = word.lower()
-
-            if key in self.synonyms:
-
-                expanded.extend(
-                    self.synonyms[key]
-                )
+            expanded.extend(self.synonyms.get(word.lower(), []))
 
         return " ".join(expanded)

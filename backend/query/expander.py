@@ -1,46 +1,67 @@
 class QueryExpander:
+    """
+    Expands abbreviations students commonly use in support emails
+    and course questions.
+    """
 
     def __init__(self):
 
         self.dictionary = {
 
-            "ai": "Artificial Intelligence",
+            # Account & support
+            "pwd": "password",
+            "pw": "password",
+            "pass": "password",
+            "otp": "one time password",
+            "acc": "account",
+            "acct": "account",
+            "login": "log in",
+            "signin": "sign in",
+            "2fa": "two factor authentication",
 
-            "ml": "Machine Learning",
+            # Payments
+            "txn": "transaction",
+            "trx": "transaction",
+            "upi": "upi payment",
+            "emi": "installment payment",
+            "inv": "invoice",
 
-            "nlp": "Natural Language Processing",
+            # Courses & certificates
+            "cert": "certificate",
+            "certs": "certificates",
+            "faq": "frequently asked questions",
+            "faqs": "frequently asked questions",
+            "vid": "video",
+            "vids": "videos",
+            "lms": "learning platform",
 
-            "cv": "Computer Vision",
-
-            "llm": "Large Language Model",
-
-            "rag": "Retrieval Augmented Generation",
-
-            "api": "Application Programming Interface",
-
-            "db": "Database",
-
-            "dl": "Deep Learning",
-
-            "nn": "Neural Network"
+            # Course topics
+            "ai": "artificial intelligence",
+            "ml": "machine learning",
+            "dl": "deep learning",
+            "nlp": "natural language processing",
+            "dsa": "data structures algorithms",
+            "ds": "data structures",
+            "py": "python",
+            "oop": "object oriented programming",
+            "js": "javascript",
+            "html": "html web development",
+            "css": "css web development",
+            "api": "application programming interface",
+            "db": "database"
         }
 
     def expand(self, query):
 
-        words = query.split()
-
         expanded = []
 
-        for word in words:
+        for word in query.split():
 
             expanded.append(word)
 
-            key = word.lower()
+            replacement = self.dictionary.get(word.lower())
 
-            if key in self.dictionary:
-
-                expanded.append(
-                    self.dictionary[key]
-                )
+            if replacement:
+                expanded.append(replacement)
 
         return " ".join(expanded)

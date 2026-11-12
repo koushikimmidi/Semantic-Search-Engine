@@ -1,3 +1,4 @@
+import os
 import threading
 
 from backend.preprocessing.pipeline import PreprocessingPipeline
@@ -5,6 +6,8 @@ from backend.retrieval.bm25 import BM25Retriever
 from backend.embeddings.encoder import EmbeddingEncoder
 from backend.embeddings.indexer import FAISSIndexer
 from backend.embeddings.search import SemanticSearcher
+from backend.embeddings.chunk_embedding_cache import ChunkEmbeddingCache
+from backend.config import Settings
 from backend.hybrid.hybrid_search import HybridSearch
 from backend.reranker import RerankPipeline
 from backend.utils import ProjectLogger
@@ -35,6 +38,21 @@ class SearchEngine:
 
         self.reranker = None
         self.filter = ResultFilter()
+
+        self.embedding_cache = ChunkEmbeddingCache(
+            Settings.EMBEDDING_MODEL,
+            cache_file=os.getenv(
+                "EMBEDDING_CACHE_PATH",
+                "data/index/embedding_cache.pkl"
+            )
+        )
+
+        # How many fused candidates the cross-encoder rescores.
+        self.rerank_candidates = int(
+            os.getenv("RERANK_CANDIDATES", "10")
+        )
+
+        self.last_query_analysis = {}
 
         # Searches run on FastAPI worker threads and the automation
         # scheduler thread while uploads/deletes rebuild the index.
@@ -109,18 +127,27 @@ class SearchEngine:
 
         self.logger.info("Encoding Documents...")
 
-        embeddings = self.encoder.encode(
-            documents
+        # Only new or changed chunks are encoded; the rest come
+        # from the on-disk embedding cache.
+        embeddings = self.embedding_cache.encode(
+            documents,
+            self.encoder.encode
         )
 
         self.profiler.stop("Encoding")
+
+        self.logger.info(
+            f"Embeddings: {self.embedding_cache.last_hits} cached, "
+            f"{self.embedding_cache.last_misses} newly encoded"
+        )
 
         self.profiler.start("Building FAISS")
 
         self.logger.info("Building FAISS Index...")
 
         indexer = FAISSIndexer(
-            embeddings.shape[1]
+            embeddings.shape[1],
+            metric="cosine"
         )
 
         indexer.build(
@@ -131,7 +158,15 @@ class SearchEngine:
 
         searcher = SemanticSearcher(
             self.encoder,
-            indexer.index
+            indexer.index,
+            normalize=True
+        )
+
+        # Spelling correction only suggests words the documents use.
+        self.query_pipeline.corrector.update_vocabulary(
+            token
+            for tokens in tokenized_docs
+            for token in tokens
         )
 
         # Swap in the new index only when it is fully built.
@@ -183,6 +218,8 @@ class SearchEngine:
         stages = self.query_pipeline.process(query)
 
         processed_query = stages["Domain Expanded"] or query
+
+        self.last_query_analysis = stages
 
         self.logger.info("")
         self.logger.info("=" * 60)
@@ -248,9 +285,12 @@ class SearchEngine:
 
         self.profiler.start("Cross Encoder")
 
+        # The expanded query helps recall (BM25 + dense), but the
+        # cross-encoder judges relevance best on the user's own
+        # natural-language question.
         final_results = self.reranker.rerank(
-            processed_query,
-            hybrid_results[:10]
+            query.strip(),
+            hybrid_results[:self.rerank_candidates]
         )
 
         self.profiler.stop("Cross Encoder")

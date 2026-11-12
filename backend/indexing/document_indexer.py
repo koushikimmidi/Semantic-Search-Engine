@@ -2,64 +2,66 @@ import os
 
 from backend.loaders import DocumentLoader
 from backend.chunking import TextChunker
-from backend.metadata import MetadataBuilder
-from backend.cache import HashCache
+
+
+SUPPORTED_EXTENSIONS = (
+    ".txt",
+    ".pdf",
+    ".docx",
+    ".md"
+)
 
 
 class DocumentIndexer:
+    """
+    Walks a folder, loads every supported document page by page,
+    and splits it into sentence-aware chunks with metadata:
 
-    def __init__(self):
+        {"id", "text", "source", "page", "chunk"}
+
+    `id` is unique across the whole folder; `chunk` is the chunk
+    number inside its file (1-based).
+    """
+
+    def __init__(self, chunk_size=None):
 
         self.loader = DocumentLoader()
 
         self.chunker = TextChunker(
-            chunk_size=300,
-            overlap=50
+            chunk_size=chunk_size or int(
+                os.getenv("CHUNK_SIZE", "700")
+            )
         )
-
-        self.metadata = MetadataBuilder()
-
-        self.cache = HashCache()
 
     def index_folder(self, folder_path):
 
         documents = []
 
-        supported = (
-            ".txt",
-            ".pdf",
-            ".docx",
-            ".md"
-        )
+        if not os.path.isdir(folder_path):
+            return documents
 
         global_id = 0
+
         for root, dirs, files in os.walk(folder_path):
 
-            for filename in files:
+            # Deterministic order -> stable ids between restarts.
+            dirs.sort()
 
-                if not filename.lower().endswith(supported):
+            for filename in sorted(files):
+
+                if not filename.lower().endswith(SUPPORTED_EXTENSIONS):
                     continue
 
-                file_path = os.path.join(
-                    root,
-                    filename
-                )
+                file_path = os.path.join(root, filename)
 
-                # Get relative path for metadata source (e.g. subfolder/file.txt)
-                rel_source = os.path.relpath(file_path, folder_path).replace("\\", "/")
+                rel_source = os.path.relpath(
+                    file_path,
+                    folder_path
+                ).replace("\\", "/")
 
-                # -------------------------------------------------
-                # TEMPORARILY DISABLE HASH CACHE
-                # Always load every file
-                # -------------------------------------------------
-                print(f"Loading {rel_source}")
-
-                # Safely load the document
                 try:
 
-                    text = self.loader.load(
-                        file_path
-                    )
+                    pages = self.loader.load_pages(file_path)
 
                 except Exception as e:
 
@@ -67,23 +69,24 @@ class DocumentIndexer:
 
                     continue
 
-                chunks = self.chunker.chunk(
-                    text
-                )
+                chunk_number = 0
 
-                metadata = self.metadata.build(
-                    chunks,
-                    source=rel_source,
-                    page=1
-                )
+                for page_number, page_text in pages:
 
-                for doc in metadata:
-                    doc["id"] = global_id
-                    global_id += 1
+                    for chunk_text in self.chunker.chunk(page_text):
 
-                documents.extend(metadata)
+                        chunk_number += 1
 
-        # Cache disabled for now
-        # self.cache.save()
+                        documents.append({
+                            "id": global_id,
+                            "text": chunk_text,
+                            "source": rel_source,
+                            "page": page_number,
+                            "chunk": chunk_number
+                        })
+
+                        global_id += 1
+
+                print(f"Loaded {rel_source} ({chunk_number} chunks)")
 
         return documents

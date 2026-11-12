@@ -13,7 +13,8 @@ class AutomationRunner:
     def __init__(
         self,
         send_emails=False,
-        automation_service=None
+        automation_service=None,
+        state_directory=None
     ):
 
         # ----------------------------------------------------
@@ -55,7 +56,8 @@ class AutomationRunner:
         # ----------------------------------------------------
 
         self.state_directory = (
-            "data/automation"
+            state_directory
+            or os.getenv("AUTOMATION_DATA_DIR", "data/automation")
         )
 
         self.state_file = os.path.join(
@@ -179,6 +181,10 @@ class AutomationRunner:
         message
     ):
 
+        # Prefer the globally unique Message-ID header.
+        if message.get("message_id"):
+            return "mid:" + message["message_id"]
+
         sender = message.get(
             "sender",
             ""
@@ -287,6 +293,9 @@ class AutomationRunner:
 
         skipped_count = 0
 
+        # IMAP UIDs of handled emails (marked read when enabled).
+        handled_uids = []
+
         # ----------------------------------------------------
         # Results
         # ----------------------------------------------------
@@ -345,14 +354,27 @@ class AutomationRunner:
                 f"Subject: {message.get('subject', '')}"
             )
 
-            result = (
-                self.automation_service
-                .process_message(message)
-            )
+            # One bad email must not stop the rest of the inbox.
+            try:
+                result = (
+                    self.automation_service
+                    .process_message(message)
+                )
+            except Exception as e:
+                print("Processing failed:", str(e))
+                result = {
+                    "success": False,
+                    "error": str(e),
+                    "message": message
+                }
 
-            results.append(
-                result
-            )
+            if result.get("route") == "SKIPPED":
+                skipped_count += 1
+                print("Skipped: automated or bulk email.")
+            else:
+                results.append(
+                    result
+                )
 
             print(
                 f"Route: {result.get('route')}"
@@ -374,6 +396,13 @@ class AutomationRunner:
                 self._save_processed_messages(
                     processed_messages
                 )
+
+                if message.get("uid"):
+                    handled_uids.append(message["uid"])
+
+        if handled_uids and self.email_fetcher.mark_processed_as_read:
+            marked = self.email_fetcher.mark_as_read(handled_uids)
+            print(f"Marked {marked} email(s) as read.")
 
         # ----------------------------------------------------
         # Summary

@@ -3,6 +3,7 @@ import email
 
 from email.header import decode_header
 from email.message import Message
+from email.utils import parseaddr
 
 from dotenv import load_dotenv
 from bs4 import BeautifulSoup
@@ -48,6 +49,12 @@ class EmailFetcher:
             "INBOX"
         )
 
+        # Mark processed emails as read in Gmail (opt-in).
+        self.mark_processed_as_read = (
+            os.getenv("EMAIL_MARK_AS_READ", "false").strip().lower()
+            in ("1", "true", "yes")
+        )
+
         self.email_limit = int(
             os.getenv(
                 "EMAIL_LIMIT",
@@ -73,13 +80,14 @@ class EmailFetcher:
     ):
 
         message = {
-
+            "uid": None,
+            "message_id": "",
+            "references": [],
             "sender": sender,
-
+            "sender_email": parseaddr(sender)[1],
             "subject": subject,
-
-            "body": body
-
+            "body": body,
+            "automated": False
         }
 
         self.messages.append(
@@ -92,221 +100,204 @@ class EmailFetcher:
     # FETCH REAL EMAILS
     # ========================================================
 
+    def _connect(self, readonly=True):
+        """
+        Open an IMAP connection and select the configured folder.
+        Returns the connection, or None when it is not configured.
+        """
+
+        if not (self.email_host and self.email_username and self.email_password):
+            print("Email account is not configured (EMAIL_HOST / EMAIL_USERNAME / EMAIL_PASSWORD).")
+            return None
+
+        mail = imaplib.IMAP4_SSL(self.email_host, self.email_port)
+        mail.login(self.email_username, self.email_password)
+
+        status, _ = mail.select(self.email_folder, readonly=readonly)
+
+        if status != "OK":
+            try:
+                mail.logout()
+            except Exception:
+                pass
+            raise RuntimeError(f"Unable to select email folder {self.email_folder!r}.")
+
+        return mail
+
+    def parse_message(self, raw_email, uid=None):
+        """
+        Convert raw RFC 822 bytes into the message dictionary used by
+        the automation pipeline.
+        """
+
+        message = email.message_from_bytes(raw_email)
+
+        sender = self._decode_subject(message.get("From", ""))
+        _, sender_email = parseaddr(sender)
+
+        references = " ".join(
+            part for part in (
+                message.get("References", ""),
+                message.get("In-Reply-To", "")
+            ) if part
+        ).split()
+
+        message_id = (message.get("Message-ID") or "").strip()
+
+        # Keep References unique and include the message itself so a
+        # reply joins the existing thread.
+        thread_references = list(dict.fromkeys(
+            references + ([message_id] if message_id else [])
+        ))
+
+        return {
+            "uid": uid,
+            "message_id": message_id,
+            "references": thread_references,
+            "sender": sender,
+            "sender_email": sender_email,
+            "subject": self._decode_subject(message.get("Subject", "")),
+            "body": self._extract_body(message),
+            "automated": self._is_automated(message, sender_email),
+        }
+
+    def _is_automated(self, message, sender_email):
+        """
+        True for newsletters, notifications, bounces and other
+        machine-generated mail that must never get an automatic reply.
+        """
+
+        auto_submitted = (message.get("Auto-Submitted") or "no").strip().lower()
+
+        if auto_submitted != "no":
+            return True
+
+        precedence = (message.get("Precedence") or "").strip().lower()
+
+        if precedence in ("bulk", "list", "junk", "auto_reply"):
+            return True
+
+        if message.get("List-Unsubscribe") or message.get("List-Id"):
+            return True
+
+        local_part = (sender_email or "").split("@")[0].lower()
+
+        automated_senders = (
+            "noreply", "no-reply", "donotreply", "do-not-reply",
+            "mailer-daemon", "postmaster", "notifications", "notification",
+            "newsletter", "bounce"
+        )
+
+        if any(token in local_part for token in automated_senders):
+            return True
+
+        # Never answer our own messages.
+        if sender_email and sender_email.lower() == self.email_username.lower():
+            return True
+
+        return False
+
     def fetch_messages(self):
 
-        # ----------------------------------------------------
-        # If local test messages exist,
-        # return them for testing.
-        # ----------------------------------------------------
-
+        # Local test messages take priority (used by scripts/tests).
         if self.messages:
-
             return self.messages
-
-        # ----------------------------------------------------
-        # Validate configuration
-        # ----------------------------------------------------
-
-        if not self.email_host:
-
-            print(
-                "Email host is not configured."
-            )
-
-            return []
-
-        if not self.email_username:
-
-            print(
-                "Email username is not configured."
-            )
-
-            return []
-
-        if not self.email_password:
-
-            print(
-                "Email password is not configured."
-            )
-
-            return []
-
-        # ----------------------------------------------------
-        # Connect to IMAP server
-        # ----------------------------------------------------
 
         mail = None
 
         try:
 
-            print(
-                "Connecting to email server..."
-            )
+            print("Connecting to email server...")
 
-            mail = imaplib.IMAP4_SSL(
-                self.email_host,
-                self.email_port
-            )
+            mail = self._connect(readonly=True)
 
-            # ------------------------------------------------
-            # Login
-            # ------------------------------------------------
-
-            mail.login(
-                self.email_username,
-                self.email_password
-            )
-
-            print(
-                "Email login successful."
-            )
-
-            # ------------------------------------------------
-            # Select mailbox in READ-ONLY mode
-            # ------------------------------------------------
-
-            status, _ = mail.select(
-                self.email_folder,
-                readonly=True
-            )
-
-            if status != "OK":
-
-                print(
-                    "Unable to select email folder."
-                )
-
+            if mail is None:
                 return []
 
-            # ------------------------------------------------
-            # Search unread messages
-            # ------------------------------------------------
-
-            status, data = mail.search(
-                None,
-                "UNSEEN"
-            )
+            status, data = mail.uid("search", None, "UNSEEN")
 
             if status != "OK":
-
-                print(
-                    "Unable to search emails."
-                )
-
+                print("Unable to search emails.")
                 return []
 
-            email_ids = data[0].split()
-
-            # ------------------------------------------------
-            # Limit number of emails
-            # ------------------------------------------------
-
-            email_ids = email_ids[
-                -self.email_limit:
-            ]
+            uids = data[0].split()[-self.email_limit:]
 
             messages = []
 
-            # ------------------------------------------------
-            # Read emails
-            # ------------------------------------------------
+            for uid in uids:
 
-            for email_id in email_ids:
-
-                status, message_data = (
-                    mail.fetch(
-                        email_id,
-                        "(RFC822)"
-                    )
-                )
+                # BODY.PEEK[] reads the message without marking it read.
+                status, message_data = mail.uid("fetch", uid, "(BODY.PEEK[])")
 
                 if status != "OK":
-
                     continue
 
-                raw_email = None
-
-                for part in message_data:
-
-                    if isinstance(
-                        part,
-                        tuple
-                    ):
-
-                        raw_email = part[1]
-
-                        break
+                raw_email = next(
+                    (part[1] for part in message_data if isinstance(part, tuple)),
+                    None
+                )
 
                 if raw_email is None:
-
                     continue
 
-                message = (
-                    email.message_from_bytes(
-                        raw_email
-                    )
-                )
-
-                sender = (
-                    message.get(
-                        "From",
-                        ""
-                    )
-                )
-
-                subject = (
-                    self._decode_subject(
-                        message.get(
-                            "Subject",
-                            ""
-                        )
-                    )
-                )
-
-                body = (
-                    self._extract_body(
-                        message
-                    )
-                )
-
                 messages.append(
-                    {
-                        "sender": sender,
-                        "subject": subject,
-                        "body": body
-                    }
+                    self.parse_message(raw_email, uid=uid.decode())
                 )
 
-            print(
-                f"Unread emails fetched: "
-                f"{len(messages)}"
-            )
+            print(f"Unread emails fetched: {len(messages)}")
 
             return messages
 
         except Exception as e:
 
-            print(
-                "Email fetching error:",
-                str(e)
-            )
+            print("Email fetching error:", str(e))
 
             return []
 
         finally:
 
-            # ------------------------------------------------
-            # Close connection safely
-            # ------------------------------------------------
+            if mail is not None:
+                try:
+                    mail.logout()
+                except Exception:
+                    pass
+
+    def mark_as_read(self, uids):
+        """
+        Flag the given message UIDs as read (Seen). Returns the number of
+        messages marked. Failures are logged, never raised.
+        """
+
+        uids = [str(uid) for uid in uids if uid]
+
+        if not uids or self.messages:
+            return 0
+
+        mail = None
+
+        try:
+
+            mail = self._connect(readonly=False)
+
+            if mail is None:
+                return 0
+
+            status, _ = mail.uid("store", ",".join(uids), "+FLAGS", r"(\Seen)")
+
+            return len(uids) if status == "OK" else 0
+
+        except Exception as e:
+
+            print("Could not mark emails as read:", str(e))
+
+            return 0
+
+        finally:
 
             if mail is not None:
-
                 try:
-
                     mail.logout()
-
                 except Exception:
-
                     pass
 
     # ========================================================

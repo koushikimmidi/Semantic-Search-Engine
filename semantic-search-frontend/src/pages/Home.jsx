@@ -10,7 +10,7 @@ import Footer from "../components/Footer";
 import DocumentManager from "../components/DocumentManager";
 import AutomationDashboard from "../components/AutomationDashboard";
 
-import { searchDocuments } from "../services/api";
+import { searchDocumentsStream } from "../services/api";
 
 import "../styles/home.css";
 
@@ -19,18 +19,24 @@ function Home({
     newSearchTrigger,
     selectedHistoryItem,
     onSaveToHistory,
-    onStartNewSearch
+    onStartNewSearch,
+    authVersion = 0
 }) {
 
     const [query, setQuery] = useState("");
 
+    // loading: waiting for the first answer token.
+    // streaming: answer text is arriving.
     const [loading, setLoading] = useState(false);
+    const [streaming, setStreaming] = useState(false);
 
     const [answer, setAnswer] = useState("");
 
     const [sources, setSources] = useState([]);
     const [activeSource, setActiveSource] = useState(null);
     const [meta, setMeta] = useState(null);
+
+    const [loadedHistoryId, setLoadedHistoryId] = useState(null);
 
 
     // Clear state on new search trigger from sidebar
@@ -40,43 +46,60 @@ function Home({
         }
     }, [newSearchTrigger]);
 
-    // Load active history item details into workspace
-    useEffect(() => {
-        if (selectedHistoryItem) {
-            setQuery(selectedHistoryItem.query || "");
-            setAnswer(selectedHistoryItem.answer || "");
-            setSources(selectedHistoryItem.sources || []);
-            setMeta(selectedHistoryItem.meta || null);
-            setActiveSource(null);
-        }
-    }, [selectedHistoryItem]);
+    // Load the selected history item into the workspace (state is
+    // adjusted during render when the selection changes).
+    if (selectedHistoryItem && selectedHistoryItem.id !== loadedHistoryId) {
+        setLoadedHistoryId(selectedHistoryItem.id);
+        setQuery(selectedHistoryItem.query || "");
+        setAnswer(selectedHistoryItem.answer || "");
+        setSources(selectedHistoryItem.sources || []);
+        setMeta(selectedHistoryItem.meta || null);
+        setActiveSource(null);
+    } else if (!selectedHistoryItem && loadedHistoryId !== null) {
+        setLoadedHistoryId(null);
+    }
+
+    const busy = loading || streaming;
 
 
     async function handleSearch(forcedQuery) {
         const searchQuery = typeof forcedQuery === "string" ? forcedQuery : query;
-        if (!searchQuery.trim() || loading) {
+        if (!searchQuery.trim() || busy) {
             return;
         }
 
         setLoading(true);
+        setStreaming(false);
         setAnswer("");
         setSources([]);
         setMeta(null);
+        setActiveSource(null);
 
         if (onStartNewSearch) {
             onStartNewSearch();
         }
 
+        let streamedText = "";
+
         try {
 
-            const result =
-                await searchDocuments(searchQuery);
+            const result = await searchDocumentsStream(searchQuery, (event) => {
 
-            const receivedAnswer = result.answer || "";
+                if (event.type === "sources") {
+                    setSources(event.sources || []);
+                    setMeta({ intent: event.intent || null, confidence: null, routing: null });
+                }
+
+                if (event.type === "token") {
+                    streamedText += event.text;
+                    setLoading(false);
+                    setStreaming(true);
+                    setAnswer(streamedText);
+                }
+            });
+
+            const receivedAnswer = result.answer || streamedText;
             const receivedSources = result.sources || [];
-
-            setAnswer(receivedAnswer);
-            setSources(receivedSources);
 
             const receivedMeta = {
                 intent: result.intent || null,
@@ -84,6 +107,8 @@ function Home({
                 routing: result.routing || null
             };
 
+            setAnswer(receivedAnswer);
+            setSources(receivedSources);
             setMeta(receivedMeta);
 
             if (receivedAnswer && onSaveToHistory) {
@@ -106,7 +131,15 @@ function Home({
         } finally {
 
             setLoading(false);
+            setStreaming(false);
 
+        }
+    }
+
+    function handleCitation(number) {
+        const source = sources[number - 1];
+        if (source) {
+            setActiveSource({ ...source, citation: number });
         }
     }
 
@@ -130,12 +163,12 @@ function Home({
 
             {activeTab === "search" ? (
                 <div className="search-workspace">
-                    {(answer || loading) && (
+                    {(answer || busy) && (
                         <SearchBox
                             query={query}
                             setQuery={setQuery}
                             handleSearch={handleSearch}
-                            loading={loading}
+                            loading={busy}
                             hasResults={
                                 Boolean(answer)
                             }
@@ -144,7 +177,7 @@ function Home({
                     )}
 
 
-                    {!answer && !loading && (
+                    {!answer && !busy && (
 
                         <HeroSection 
                             onSelectQuery={(q) => {
@@ -176,7 +209,10 @@ function Home({
                     <AnswerCard
                         answer={answer}
                         loading={loading}
+                        streaming={streaming}
                         meta={meta}
+                        sourceCount={sources.length}
+                        onCitationClick={handleCitation}
                     />
 
 
@@ -196,9 +232,9 @@ function Home({
                     />
                 </div>
             ) : activeTab === "automation" ? (
-                <AutomationDashboard />
+                <AutomationDashboard key={`automation-${authVersion}`} />
             ) : (
-                <DocumentManager />
+                <DocumentManager key={`documents-${authVersion}`} />
             )}
 
 
@@ -210,7 +246,10 @@ function Home({
                     <div className="source-modal-content card" onClick={(e) => e.stopPropagation()}>
                         <div className="source-modal-header">
                             <div>
-                                <h3>{activeSource.source}</h3>
+                                <h3>
+                                    {activeSource.citation ? `[${activeSource.citation}] ` : ""}
+                                    {activeSource.source}
+                                </h3>
                                 <p className="subtitle">Page {activeSource.page ?? 1} • Chunk {activeSource.chunk ?? "-"}</p>
                             </div>
                             <button className="source-modal-close" onClick={() => setActiveSource(null)}>×</button>

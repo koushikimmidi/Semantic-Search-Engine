@@ -119,6 +119,11 @@ class EscalationManager:
                 ""
             ),
 
+            # Needed to send a threaded reply later.
+            "sender_email": message.get("sender_email", ""),
+            "message_id": message.get("message_id", ""),
+            "references": message.get("references", []),
+
             "subject": message.get(
                 "subject",
                 ""
@@ -143,7 +148,9 @@ class EscalationManager:
 
             "resolved_at": None,
 
-            "resolution_note": None
+            "resolution_note": None,
+
+            "reply": None
         }
 
         with self._lock:
@@ -205,7 +212,18 @@ class EscalationManager:
     # RESOLVE ESCALATION
     # ========================================================
 
-    def resolve(self, escalation_id, resolution_note=None):
+    def get(self, escalation_id):
+
+        with self._lock:
+
+            for item in self.escalated_messages:
+
+                if item.get("id") == escalation_id:
+                    return dict(item)
+
+        return None
+
+    def resolve(self, escalation_id, resolution_note=None, reply=None):
 
         with self._lock:
 
@@ -220,6 +238,9 @@ class EscalationManager:
                     )
 
                     item["resolution_note"] = resolution_note
+
+                    if reply is not None:
+                        item["reply"] = reply
 
                     self._save()
 

@@ -1,0 +1,76 @@
+# Full stack: Ollama (LLM) + backend API + frontend.
+#
+#   cp .env.example .env      # then edit it
+#   docker compose up --build
+#
+# Frontend: http://localhost:8080   API: http://localhost:8000/docs
+#
+# The first start pulls the Ollama model (gemma4 is ~10 GB) and the
+# embedding/reranker models, so it takes a while. Later starts reuse
+# the named volumes.
+
+services:
+
+  ollama:
+    image: ollama/ollama:latest
+    volumes:
+      - ollama:/root/.ollama
+    healthcheck:
+      test: ["CMD", "ollama", "list"]
+      interval: 10s
+      timeout: 5s
+      retries: 12
+    restart: unless-stopped
+
+  # One-shot job that downloads the model, then exits.
+  ollama-pull:
+    image: ollama/ollama:latest
+    depends_on:
+      ollama:
+        condition: service_healthy
+    environment:
+      OLLAMA_HOST: http://ollama:11434
+    entrypoint: ["ollama", "pull", "${OLLAMA_MODEL:-gemma4:latest}"]
+    volumes:
+      - ollama:/root/.ollama
+    restart: "no"
+
+  backend:
+    build: .
+    env_file:
+      - path: .env
+        required: false
+    environment:
+      OLLAMA_HOST: http://ollama:11434
+      KNOWLEDGE_BASE_PATH: data/documents/education
+      AUTOMATION_DATA_DIR: data/automation
+      EMBEDDING_CACHE_PATH: data/index/embedding_cache.pkl
+    volumes:
+      # Knowledge base is editable from the host and the UI.
+      - ./data/documents/education:/app/data/documents/education
+      - backend-state:/app/data/automation
+      - backend-index:/app/data/index
+      - model-cache:/app/.cache/huggingface
+    ports:
+      - "8000:8000"
+    depends_on:
+      ollama-pull:
+        condition: service_completed_successfully
+    restart: unless-stopped
+
+  frontend:
+    build:
+      context: ./semantic-search-frontend
+      args:
+        VITE_API_URL: ""
+    ports:
+      - "8080:80"
+    depends_on:
+      - backend
+    restart: unless-stopped
+
+volumes:
+  ollama:
+  backend-state:
+  backend-index:
+  model-cache:

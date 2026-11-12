@@ -1,6 +1,8 @@
 import { useState } from "react";
 import "../styles/answer.css";
 
+const CITATION_PATTERN = /\[(\d+(?:\s*,\s*\d+)*)\]/g;
+
 function formatIntent(intent) {
     if (!intent) return null;
     return intent
@@ -10,7 +12,52 @@ function formatIntent(intent) {
         .join(" ");
 }
 
-function AnswerCard({ answer, loading, meta }) {
+function stripCitations(text) {
+    return text.replace(/\s*\[\d+(?:\s*,\s*\d+)*\]/g, "").replace(/\s+([.,;:!?])/g, "$1");
+}
+
+/**
+ * Split the answer into text and citation chips. "[1]" and
+ * "[1, 2]" become clickable chips when the source exists.
+ */
+function renderWithCitations(text, sourceCount, onCitationClick) {
+    const parts = [];
+    let lastIndex = 0;
+
+    for (const match of text.matchAll(CITATION_PATTERN)) {
+        if (match.index > lastIndex) {
+            parts.push(text.slice(lastIndex, match.index));
+        }
+
+        const numbers = match[1].split(",").map((n) => parseInt(n.trim(), 10));
+
+        numbers.forEach((number) => {
+            const valid = number >= 1 && number <= sourceCount;
+            parts.push(
+                <button
+                    key={`cite-${match.index}-${number}`}
+                    type="button"
+                    className={`citation-chip ${valid ? "" : "invalid"}`}
+                    onClick={() => valid && onCitationClick && onCitationClick(number)}
+                    title={valid ? `Open source ${number}` : "Source not available"}
+                    disabled={!valid}
+                >
+                    {number}
+                </button>
+            );
+        });
+
+        lastIndex = match.index + match[0].length;
+    }
+
+    if (lastIndex < text.length) {
+        parts.push(text.slice(lastIndex));
+    }
+
+    return parts;
+}
+
+function AnswerCard({ answer, loading, streaming, meta, sourceCount = 0, onCitationClick }) {
     const [copied, setCopied] = useState(false);
 
     if (loading || !answer) {
@@ -18,7 +65,7 @@ function AnswerCard({ answer, loading, meta }) {
     }
 
     const handleCopy = () => {
-        navigator.clipboard.writeText(answer);
+        navigator.clipboard.writeText(stripCitations(answer));
         setCopied(true);
         setTimeout(() => setCopied(false), 2000);
     };
@@ -42,15 +89,16 @@ function AnswerCard({ answer, loading, meta }) {
                         </h2>
 
                         <p>
-                            Grounded AI response
+                            {streaming ? "Generating…" : "Grounded AI response"}
                         </p>
 
                     </div>
 
-                    <button 
+                    <button
                         className={`copy-btn ${copied ? "copied" : ""}`}
                         onClick={handleCopy}
                         title="Copy answer"
+                        disabled={streaming}
                     >
                         {copied ? "✓ Copied" : "📋 Copy"}
                     </button>
@@ -60,12 +108,13 @@ function AnswerCard({ answer, loading, meta }) {
                 <div className="answer-content">
 
                     <p>
-                        {answer}
+                        {renderWithCitations(answer, sourceCount, onCitationClick)}
+                        {streaming && <span className="stream-cursor" aria-hidden="true"></span>}
                     </p>
 
                 </div>
 
-                {meta && (
+                {meta && !streaming && (
                     <div className="answer-meta">
                         {meta.intent?.intent && (
                             <span className="answer-chip">

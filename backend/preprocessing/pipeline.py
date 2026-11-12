@@ -44,7 +44,9 @@ class PreprocessingPipeline:
 
                 "source": doc.get("source"),
 
-                "page": doc.get("page")
+                "page": doc.get("page"),
+
+                "chunk": doc.get("chunk")
 
             })
 

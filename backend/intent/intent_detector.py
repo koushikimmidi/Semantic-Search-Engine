@@ -1,9 +1,32 @@
+import os
 import re
 
 
 class IntentDetector:
+    """
+    Hybrid intent detection.
 
-    def __init__(self):
+    1. Rules: exact support phrases ("forgot my password"). Very
+       precise, but only fire on phrasings they list.
+    2. Classifier: few-shot embedding classifier trained on
+       data/intent/intent_examples.json. Handles new phrasings.
+
+    A specific rule match wins (confirmed by the classifier when
+    both agree). The classifier decides when rules find nothing or
+    are ambiguous. If the classifier is unavailable, rules alone are
+    used, so detection never fails.
+    """
+
+    def __init__(self, classifier=None, use_classifier=None):
+
+        if use_classifier is None:
+            use_classifier = (
+                os.getenv("INTENT_CLASSIFIER", "true").strip().lower()
+                not in ("0", "false", "no", "off")
+            )
+
+        self.use_classifier = use_classifier
+        self._classifier = classifier
 
         self.intent_patterns = {
 
@@ -173,7 +196,7 @@ class IntentDetector:
     # INTENT DETECTION
     # ========================================================
 
-    def detect(
+    def detect_rules(
         self,
         query
     ):
@@ -309,3 +332,106 @@ class IntentDetector:
             "confidence": confidence,
             "matched_patterns": best_matches
         }
+
+    # ========================================================
+    # CLASSIFIER
+    # ========================================================
+
+    def _get_classifier(self):
+
+        if self._classifier is None:
+            from backend.intent.intent_classifier import IntentClassifier
+            self._classifier = IntentClassifier()
+
+        return self._classifier
+
+    def detect_classifier(self, query):
+
+        return self._get_classifier().predict(query)
+
+    # ========================================================
+    # HYBRID DETECTION
+    # ========================================================
+
+    def detect(
+        self,
+        query
+    ):
+
+        rules = self.detect_rules(query)
+        rules["method"] = "rules"
+
+        if not self.use_classifier or not query or not query.strip():
+            return rules
+
+        try:
+            model = self.detect_classifier(query)
+        except Exception as e:
+            print("Intent classifier unavailable, using rules:", str(e))
+            return rules
+
+        rule_intent = rules["intent"]
+        model_intent = model["intent"]
+
+        # A rule fired only on a short, generic keyword ("refund",
+        # "payment", "certificate"): if the classifier confidently
+        # picks a different specific intent, the classifier wins.
+        # e.g. "cancel after the refund window" -> CANCELLATION.
+        weak_rule = rules.get("confidence", 0.0) < 0.85
+
+        if (
+            rule_intent not in ("UNKNOWN", "AMBIGUOUS")
+            and weak_rule
+            and model_intent not in ("UNKNOWN", "AMBIGUOUS", rule_intent)
+            and model["confidence"] >= 0.6
+        ):
+            return {
+                "intent": model_intent,
+                "confidence": model["confidence"],
+                "matched_patterns": rules.get("matched_patterns", []),
+                "method": "classifier (overrode weak rule)",
+                "rules_intent": rule_intent
+            }
+
+        # Specific rule match: keep it; boost when the model agrees.
+        if rule_intent not in ("UNKNOWN", "AMBIGUOUS"):
+
+            if model_intent == rule_intent:
+                rules["confidence"] = round(
+                    max(rules["confidence"], model["confidence"], 0.9), 2
+                )
+                rules["method"] = "rules+classifier"
+
+            rules["classifier"] = {
+                "intent": model_intent,
+                "confidence": model["confidence"]
+            }
+
+            return rules
+
+        # Rules are ambiguous: the model breaks the tie if it picks
+        # one of the candidates.
+        if rule_intent == "AMBIGUOUS":
+
+            if model_intent in rules.get("candidate_intents", []):
+                return {
+                    "intent": model_intent,
+                    "confidence": model["confidence"],
+                    "matched_patterns": rules.get("matched_patterns", []),
+                    "method": "classifier (rule tie-break)"
+                }
+
+            return rules
+
+        # No rule matched: trust the classifier (may be UNKNOWN).
+        result = {
+            "intent": model_intent,
+            "confidence": model["confidence"],
+            "matched_patterns": [],
+            "method": "classifier"
+        }
+
+        if "candidate_intents" in model:
+            result["candidate_intents"] = model["candidate_intents"]
+
+        return result

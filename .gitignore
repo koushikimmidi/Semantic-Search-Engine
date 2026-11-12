@@ -31,3 +31,6 @@ Thumbs.db
 # Runtime state
 data/automation/
 data/cache/
+data/index/embedding_cache.pkl
+data/index/*.tmp
+.pytest_cache/

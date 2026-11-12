@@ -59,7 +59,7 @@ function SourceCard({ sources, onSelectSource }) {
                                 </h3>
 
                                 <span className="source-rank">
-                                    #{index + 1} • Chunk {source.chunk ?? index + 1}
+                                    [{index + 1}] • Page {source.page ?? 1} • Chunk {source.chunk ?? index + 1}
                                 </span>
 
                             </div>

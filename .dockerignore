@@ -19,4 +19,11 @@ data/index/
 .idea/
 .vscode/
 
-.env
+.envsemantic-search-frontend/
+tests/
+data/automation/
+data/documents/old_development/
+.github/
+.claude/
+*.md
+!README.md

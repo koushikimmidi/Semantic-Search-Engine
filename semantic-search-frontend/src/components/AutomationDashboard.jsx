@@ -7,7 +7,8 @@ import {
     stopScheduler,
     processTestMessage,
     getEscalations,
-    resolveEscalation
+    resolveEscalation,
+    replyToEscalation
 } from "../services/api";
 import "../styles/document-manager.css";
 import "../styles/automation.css";
@@ -64,6 +65,10 @@ function AutomationDashboard() {
     const [testResult, setTestResult] = useState(null);
 
     const [notes, setNotes] = useState({});
+    const [replies, setReplies] = useState({});
+    const [replyOpen, setReplyOpen] = useState(null);
+    const [sendingId, setSendingId] = useState(null);
+    const [queueMessage, setQueueMessage] = useState("");
 
     const refresh = useCallback(async () => {
         try {
@@ -140,6 +145,31 @@ function AutomationDashboard() {
             setTestResult({ error: err.message });
         } finally {
             setTesting(false);
+            refresh();
+        }
+    }
+
+    function openReply(item) {
+        setReplyOpen(item.id);
+        setQueueMessage("");
+        setReplies((current) => (
+            current[item.id] !== undefined
+                ? current
+                : { ...current, [item.id]: item.suggested_answer || "" }
+        ));
+    }
+
+    async function handleSendReply(item) {
+        setSendingId(item.id);
+        setQueueMessage("");
+        try {
+            await replyToEscalation(item.id, replies[item.id], notes[item.id]);
+            setQueueMessage(`Reply sent to ${item.sender_email || item.sender}.`);
+            setReplyOpen(null);
+        } catch (err) {
+            setQueueMessage(`Reply not sent: ${err.message}`);
+        } finally {
+            setSendingId(null);
             refresh();
         }
     }
@@ -310,6 +340,8 @@ function AutomationDashboard() {
                             </label>
                         </div>
 
+                        {queueMessage && <p className="auto-run-message">{queueMessage}</p>}
+
                         {escalations.length === 0 ? (
                             <div className="auto-empty">No messages waiting for review.</div>
                         ) : (
@@ -339,6 +371,31 @@ function AutomationDashboard() {
 
                                         <p className="auto-reason">{item.confidence?.reason || item.reason}</p>
 
+                                        {item.status === "PENDING" && replyOpen === item.id && (
+                                            <div className="auto-reply-box">
+                                                <label className="auto-field">
+                                                    <span>Reply to {item.sender_email || item.sender} (sent in the same email thread)</span>
+                                                    <textarea
+                                                        rows={4}
+                                                        value={replies[item.id] ?? ""}
+                                                        onChange={(e) => setReplies({ ...replies, [item.id]: e.target.value })}
+                                                    />
+                                                </label>
+                                                <div className="auto-controls">
+                                                    <button
+                                                        className="auto-btn primary"
+                                                        onClick={() => handleSendReply(item)}
+                                                        disabled={sendingId === item.id || !(replies[item.id] || "").trim()}
+                                                    >
+                                                        {sendingId === item.id ? "Sending…" : "Send reply"}
+                                                    </button>
+                                                    <button className="auto-btn" onClick={() => setReplyOpen(null)}>
+                                                        Cancel
+                                                    </button>
+                                                </div>
+                                            </div>
+                                        )}
+
                                         {item.status === "PENDING" ? (
                                             <div className="auto-resolve">
                                                 <input
@@ -346,14 +403,24 @@ function AutomationDashboard() {
                                                     value={notes[item.id] || ""}
                                                     onChange={(e) => setNotes({ ...notes, [item.id]: e.target.value })}
                                                 />
+                                                {replyOpen !== item.id && (
+                                                    <button className="auto-btn primary" onClick={() => openReply(item)}>
+                                                        Reply
+                                                    </button>
+                                                )}
                                                 <button className="auto-btn" onClick={() => handleResolve(item.id)}>
                                                     Mark resolved
                                                 </button>
                                             </div>
                                         ) : (
-                                            item.resolution_note && (
-                                                <p className="auto-reason">Note: {item.resolution_note}</p>
-                                            )
+                                            <>
+                                                {item.reply && (
+                                                    <p className="auto-suggested"><span>Sent reply:</span> {item.reply}</p>
+                                                )}
+                                                {item.resolution_note && (
+                                                    <p className="auto-reason">Note: {item.resolution_note}</p>
+                                                )}
+                                            </>
                                         )}
                                     </article>
                                 ))}

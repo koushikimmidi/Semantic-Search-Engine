@@ -1,4 +1,7 @@
-from fastapi import FastAPI, UploadFile, File, Form, Query
+import json
+
+from fastapi import Depends, FastAPI, UploadFile, File, Form, Query
+from fastapi.responses import StreamingResponse
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
 import os
@@ -17,6 +20,8 @@ from backend.automation.automation_service import AutomationService
 from backend.automation.automation_runner import AutomationRunner
 from backend.automation.automation_scheduler import AutomationScheduler
 from backend.automation.automation_history import AutomationHistory
+from backend.automation.escalation import EscalationManager
+from backend.api.auth import auth_enabled, get_role, require_role
 
 
 app = FastAPI(
@@ -50,7 +55,22 @@ app.add_middleware(
 # EDUCATION KNOWLEDGE BASE
 # ============================================================
 
-KNOWLEDGE_BASE_PATH = "data/documents/education"
+KNOWLEDGE_BASE_PATH = os.getenv(
+    "KNOWLEDGE_BASE_PATH",
+    "data/documents/education"
+)
+
+AUTOMATION_DATA_DIR = os.getenv(
+    "AUTOMATION_DATA_DIR",
+    "data/automation"
+)
+
+if not auth_enabled():
+    print(
+        "WARNING: ADMIN_API_KEY / AGENT_API_KEY are not set. "
+        "Authentication is DISABLED; every request has admin rights. "
+        "Set the keys in .env before exposing the API."
+    )
 
 KNOWLEDGE_BASE_ROOT = os.path.realpath(KNOWLEDGE_BASE_PATH)
 
@@ -131,7 +151,10 @@ rag = RAGPipeline()
 automation_service = AutomationService(
     search_engine=engine,
     rag_pipeline=rag,
-    send_emails=SEND_EMAILS
+    send_emails=SEND_EMAILS,
+    escalation_manager=EscalationManager(
+        storage_directory=AUTOMATION_DATA_DIR
+    )
 )
 
 # ------------------------------------------------------------
@@ -143,7 +166,8 @@ automation_service = AutomationService(
 
 automation_runner = AutomationRunner(
     send_emails=SEND_EMAILS,
-    automation_service=automation_service
+    automation_service=automation_service,
+    state_directory=AUTOMATION_DATA_DIR
 )
 
 # ------------------------------------------------------------
@@ -166,7 +190,9 @@ automation_scheduler = AutomationScheduler(
 # AutomationRunner.
 # ------------------------------------------------------------
 
-automation_history = AutomationHistory()
+automation_history = AutomationHistory(
+    history_directory=AUTOMATION_DATA_DIR
+)
 
 
 # ============================================================
@@ -187,6 +213,11 @@ class EscalationResolution(BaseModel):
     resolution_note: Optional[str] = None
 
 
+class EscalationReply(BaseModel):
+    reply: str
+    resolution_note: Optional[str] = None
+
+
 # ============================================================
 # HOME
 # ============================================================
@@ -201,10 +232,69 @@ def home():
 
 
 # ============================================================
+# AUTH
+# ============================================================
+
+@app.get("/auth/me")
+def auth_me(role: str = Depends(get_role)):
+
+    return {
+        "success": True,
+        "role": role,
+        "auth_enabled": auth_enabled()
+    }
+
+
+# ============================================================
+# STREAMING SEARCH
+#
+# Newline-delimited JSON events:
+#   {"type": "sources", ...}  retrieved sources + intent
+#   {"type": "token", "text"} answer text as it is generated
+#   {"type": "done", ...}     full response with confidence
+#   {"type": "error", ...}    if something fails mid-stream
+# ============================================================
+
+@app.post("/search/stream")
+def search_stream(request: SearchRequest):
+
+    def events():
+
+        try:
+
+            results = engine.search(request.query)
+
+            for event in rag.stream_answer(request.query, results):
+
+                if event.get("type") == "done":
+                    event["success"] = True
+
+                yield json.dumps(event, default=str) + "\n"
+
+        except Exception as e:
+
+            import traceback
+
+            traceback.print_exc()
+
+            yield json.dumps({
+                "type": "error",
+                "success": False,
+                "error": str(e)
+            }) + "\n"
+
+    return StreamingResponse(
+        events(),
+        media_type="application/x-ndjson",
+        headers={"Cache-Control": "no-cache", "X-Accel-Buffering": "no"}
+    )
+
+
+# ============================================================
 # AUTOMATION STATUS
 # ============================================================
 
-@app.get("/automation/status")
+@app.get("/automation/status", dependencies=[Depends(require_role("agent"))])
 def automation_status():
 
     return {
@@ -286,7 +376,7 @@ def search(request: SearchRequest):
 # AUTOMATION PROCESS
 # ============================================================
 
-@app.post("/automation/process")
+@app.post("/automation/process", dependencies=[Depends(require_role("agent"))])
 def process_automation_message(
     message: AutomationMessage
 ):
@@ -367,7 +457,7 @@ def process_automation_message(
 # AUTOMATION RUN
 # ============================================================
 
-@app.post("/automation/run")
+@app.post("/automation/run", dependencies=[Depends(require_role("agent"))])
 def run_automation():
 
     try:
@@ -421,7 +511,7 @@ def run_automation():
 # AUTOMATION HISTORY
 # ============================================================
 
-@app.get("/automation/history")
+@app.get("/automation/history", dependencies=[Depends(require_role("agent"))])
 def automation_history_list():
 
     try:
@@ -454,7 +544,7 @@ def automation_history_list():
         }
 
 
-@app.get("/automation/history/latest")
+@app.get("/automation/history/latest", dependencies=[Depends(require_role("agent"))])
 def automation_history_latest():
 
     try:
@@ -478,7 +568,7 @@ def automation_history_latest():
 # AUTOMATION DASHBOARD
 # ============================================================
 
-@app.get("/automation/dashboard")
+@app.get("/automation/dashboard", dependencies=[Depends(require_role("agent"))])
 def automation_dashboard():
 
     try:
@@ -640,7 +730,7 @@ def automation_dashboard():
 # AUTOMATION SCHEDULER
 # ============================================================
 
-@app.post("/automation/scheduler/start")
+@app.post("/automation/scheduler/start", dependencies=[Depends(require_role("admin"))])
 def start_automation_scheduler():
 
     try:
@@ -673,7 +763,7 @@ def start_automation_scheduler():
         }
 
 
-@app.post("/automation/scheduler/stop")
+@app.post("/automation/scheduler/stop", dependencies=[Depends(require_role("admin"))])
 def stop_automation_scheduler():
 
     try:
@@ -706,7 +796,7 @@ def stop_automation_scheduler():
         }
 
 
-@app.get("/automation/scheduler/status")
+@app.get("/automation/scheduler/status", dependencies=[Depends(require_role("agent"))])
 def automation_scheduler_status():
 
     try:
@@ -728,7 +818,7 @@ def automation_scheduler_status():
 # HUMAN REVIEW QUEUE (ESCALATIONS)
 # ============================================================
 
-@app.get("/automation/escalations")
+@app.get("/automation/escalations", dependencies=[Depends(require_role("agent"))])
 def list_escalations(
     status: Optional[str] = Query(None)
 ):
@@ -745,7 +835,7 @@ def list_escalations(
     }
 
 
-@app.post("/automation/escalations/{escalation_id}/resolve")
+@app.post("/automation/escalations/{escalation_id}/resolve", dependencies=[Depends(require_role("agent"))])
 def resolve_escalation(
     escalation_id: str,
     resolution: EscalationResolution
@@ -767,6 +857,22 @@ def resolve_escalation(
         "success": True,
         "escalation": record
     }
+
+
+@app.post(
+    "/automation/escalations/{escalation_id}/reply",
+    dependencies=[Depends(require_role("agent"))]
+)
+def reply_to_escalation(
+    escalation_id: str,
+    request: EscalationReply
+):
+
+    return automation_service.send_human_reply(
+        escalation_id,
+        request.reply,
+        request.resolution_note
+    )
 
 
 # ============================================================
@@ -829,7 +935,7 @@ def list_documents():
 # UPLOAD DOCUMENTS
 # ============================================================
 
-@app.post("/documents/upload")
+@app.post("/documents/upload", dependencies=[Depends(require_role("admin"))])
 def upload_documents(
     files: List[UploadFile] = File(...),
     paths: Optional[List[str]] = Form(None)
@@ -979,7 +1085,7 @@ def get_document_content(
 # DELETE DOCUMENT
 # ============================================================
 
-@app.delete("/documents")
+@app.delete("/documents", dependencies=[Depends(require_role("admin"))])
 def delete_document(
     path: str = Query(...)
 ):
