@@ -1,0 +1,24 @@
+.home-container {
+    width: 100%;
+    max-width: 1000px;
+    margin: 0 auto;
+    padding: 40px 24px;
+    display: flex;
+    flex-direction: column;
+    min-height: 100%;
+    gap: 30px;
+}
+
+.search-workspace {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    gap: 30px;
+    width: 100%;
+}
+
+@media (max-width: 768px) {
+    .home-container {
+        padding: 24px 16px;
+    }
+}

@@ -1,0 +1,336 @@
+.automation-section {
+    display: flex;
+    flex-direction: column;
+    gap: 24px;
+}
+
+.automation-section .doc-manager-header {
+    margin-bottom: 0;
+}
+
+.auto-error {
+    background: rgba(239, 68, 68, 0.08);
+    border: 1px solid rgba(239, 68, 68, 0.3);
+    color: #dc2626;
+    border-radius: 12px;
+    padding: 12px 16px;
+    font-size: 14px;
+}
+
+.auto-error-text {
+    color: #dc2626;
+    font-size: 14px;
+}
+
+.auto-empty {
+    color: var(--text-secondary);
+    font-size: 14px;
+    padding: 12px 0;
+}
+
+/* Stats */
+.auto-stats {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+    gap: 14px;
+}
+
+.auto-stat {
+    padding: 16px 18px;
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+}
+
+.auto-stat.highlight {
+    border-color: rgba(245, 158, 11, 0.5);
+}
+
+.auto-stat-label {
+    font-size: 12.5px;
+    color: var(--text-secondary);
+}
+
+.auto-stat-value {
+    font-size: 24px;
+    font-weight: 700;
+    color: var(--text-primary);
+    font-variant-numeric: tabular-nums;
+}
+
+/* Controls + test */
+.auto-grid {
+    display: grid;
+    grid-template-columns: 1fr 1.3fr;
+    gap: 24px;
+    align-items: start;
+}
+
+.auto-controls {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+    margin-bottom: 16px;
+}
+
+.auto-btn {
+    border: 1px solid var(--border-hover);
+    background: var(--surface-strong);
+    color: var(--text-primary);
+    border-radius: 10px;
+    padding: 9px 16px;
+    font-size: 14px;
+    font-weight: 500;
+    cursor: pointer;
+    transition: background 0.2s ease, border-color 0.2s ease, opacity 0.2s ease;
+}
+
+.auto-btn:hover:not(:disabled) {
+    border-color: var(--accent);
+}
+
+.auto-btn:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+}
+
+.auto-btn.primary {
+    background: var(--accent);
+    border-color: var(--accent);
+    color: #ffffff;
+}
+
+.auto-btn.primary:hover:not(:disabled) {
+    background: var(--accent-hover);
+}
+
+.auto-btn.danger {
+    color: #dc2626;
+    border-color: rgba(239, 68, 68, 0.4);
+}
+
+.auto-scheduler-status {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 13px;
+    color: var(--text-secondary);
+}
+
+.auto-scheduler-status .status-dot {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    background: #94a3b8;
+}
+
+.auto-scheduler-status .status-dot.online {
+    background: #10b981;
+}
+
+.auto-run-message {
+    margin-top: 14px;
+    font-size: 13.5px;
+    color: var(--text-body);
+    line-height: 1.5;
+}
+
+.auto-field {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    margin-bottom: 12px;
+    font-size: 13px;
+    color: var(--text-secondary);
+}
+
+.auto-field input,
+.auto-field textarea,
+.auto-resolve input {
+    font: inherit;
+    font-size: 14px;
+    color: var(--input-text);
+    background: var(--bg-secondary);
+    border: 1px solid var(--border-hover);
+    border-radius: 10px;
+    padding: 9px 12px;
+    resize: vertical;
+}
+
+.auto-field input:focus,
+.auto-field textarea:focus,
+.auto-resolve input:focus {
+    outline: none;
+    border-color: var(--accent);
+    box-shadow: 0 0 0 3px var(--accent-glow);
+}
+
+.auto-test-result {
+    margin-top: 16px;
+    padding-top: 16px;
+    border-top: 1px solid var(--border);
+}
+
+.auto-test-row {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 12px;
+    font-size: 13px;
+    color: var(--text-secondary);
+    margin-bottom: 10px;
+}
+
+.auto-answer {
+    font-size: 14.5px;
+    color: var(--text-body);
+    line-height: 1.6;
+}
+
+.auto-reason {
+    font-size: 12.5px;
+    color: var(--text-secondary);
+    margin-top: 6px;
+}
+
+/* Badges */
+.auto-badge {
+    font-size: 12px;
+    font-weight: 600;
+    border-radius: 999px;
+    padding: 3px 10px;
+    white-space: nowrap;
+}
+
+.auto-badge.auto {
+    background: rgba(16, 185, 129, 0.12);
+    color: #059669;
+}
+
+.auto-badge.review {
+    background: rgba(245, 158, 11, 0.14);
+    color: #b45309;
+}
+
+/* Queue */
+.auto-queue-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    gap: 12px;
+}
+
+.auto-toggle {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 13px;
+    color: var(--text-secondary);
+    cursor: pointer;
+    white-space: nowrap;
+}
+
+.auto-queue-list {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+}
+
+.auto-queue-item {
+    border: 1px solid var(--border);
+    border-radius: 14px;
+    padding: 16px;
+    background: var(--bg-secondary);
+}
+
+.auto-queue-item header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    gap: 12px;
+    margin-bottom: 10px;
+}
+
+.auto-queue-item header strong {
+    display: block;
+    color: var(--text-primary);
+    font-size: 15px;
+}
+
+.auto-meta {
+    font-size: 12.5px;
+    color: var(--text-secondary);
+}
+
+.auto-body {
+    font-size: 14px;
+    color: var(--text-body);
+    line-height: 1.55;
+    white-space: pre-wrap;
+    max-height: 120px;
+    overflow: auto;
+}
+
+.auto-suggested {
+    margin-top: 10px;
+    font-size: 13.5px;
+    color: var(--text-body);
+    background: var(--soft-accent);
+    border-radius: 10px;
+    padding: 10px 12px;
+}
+
+.auto-suggested span {
+    font-weight: 600;
+    color: var(--accent);
+}
+
+.auto-resolve {
+    display: flex;
+    gap: 10px;
+    margin-top: 12px;
+}
+
+.auto-resolve input {
+    flex: 1;
+    min-width: 0;
+}
+
+/* History table */
+.auto-table-wrap {
+    overflow-x: auto;
+}
+
+.auto-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 13.5px;
+    font-variant-numeric: tabular-nums;
+}
+
+.auto-table th,
+.auto-table td {
+    text-align: left;
+    padding: 9px 12px;
+    border-bottom: 1px solid var(--border);
+    white-space: nowrap;
+}
+
+.auto-table th {
+    color: var(--text-secondary);
+    font-weight: 500;
+}
+
+.auto-table td {
+    color: var(--text-body);
+}
+
+@media (max-width: 900px) {
+    .auto-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .auto-resolve {
+        flex-direction: column;
+    }
+}

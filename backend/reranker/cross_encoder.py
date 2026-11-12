@@ -9,15 +9,25 @@ class CrossEncoderRanker:
             "cross-encoder/ms-marco-MiniLM-L-6-v2"
         )
 
-    def rerank(self, query, documents):
+    def score(self, query, documents):
+
+        if not documents:
+            return []
 
         pairs = [
             (query, document)
             for document in documents
         ]
 
-        scores = self.model.predict(
+        return self.model.predict(
             pairs
+        )
+
+    def rerank(self, query, documents):
+
+        scores = self.score(
+            query,
+            documents
         )
 
         ranked = sorted(

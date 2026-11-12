@@ -32,49 +32,58 @@ class DocumentIndexer:
             ".md"
         )
 
-        for filename in os.listdir(folder_path):
+        global_id = 0
+        for root, dirs, files in os.walk(folder_path):
 
-            if not filename.lower().endswith(supported):
-                continue
+            for filename in files:
 
-            file_path = os.path.join(
-                folder_path,
-                filename
-            )
+                if not filename.lower().endswith(supported):
+                    continue
 
-            # Skip files that have not changed
-            if not self.cache.is_modified(file_path):
-
-                print(f"Skipping {filename}")
-
-                continue
-
-            # Safely load the document
-            try:
-
-                text = self.loader.load(
-                    file_path
+                file_path = os.path.join(
+                    root,
+                    filename
                 )
 
-            except Exception as e:
+                # Get relative path for metadata source (e.g. subfolder/file.txt)
+                rel_source = os.path.relpath(file_path, folder_path).replace("\\", "/")
 
-                print(f"Skipping {filename}: {e}")
+                # -------------------------------------------------
+                # TEMPORARILY DISABLE HASH CACHE
+                # Always load every file
+                # -------------------------------------------------
+                print(f"Loading {rel_source}")
 
-                continue
+                # Safely load the document
+                try:
 
-            chunks = self.chunker.chunk(
-                text
-            )
+                    text = self.loader.load(
+                        file_path
+                    )
 
-            metadata = self.metadata.build(
-                chunks,
-                source=filename,
-                page=1
-            )
+                except Exception as e:
 
-            documents.extend(metadata)
+                    print(f"Skipping {rel_source}: {e}")
 
-        # Save updated hash cache
-        self.cache.save()
+                    continue
+
+                chunks = self.chunker.chunk(
+                    text
+                )
+
+                metadata = self.metadata.build(
+                    chunks,
+                    source=rel_source,
+                    page=1
+                )
+
+                for doc in metadata:
+                    doc["id"] = global_id
+                    global_id += 1
+
+                documents.extend(metadata)
+
+        # Cache disabled for now
+        # self.cache.save()
 
         return documents

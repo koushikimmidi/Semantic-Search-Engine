@@ -1,3 +1,5 @@
+import threading
+
 from backend.preprocessing.pipeline import PreprocessingPipeline
 from backend.retrieval.bm25 import BM25Retriever
 from backend.embeddings.encoder import EmbeddingEncoder
@@ -22,8 +24,8 @@ class SearchEngine:
 
         self.query_pipeline = QueryPipeline()
 
-        self.documents = None
-        self.processed_docs = None
+        self.documents = []
+        self.processed_docs = []
 
         self.bm25 = None
         self.encoder = None
@@ -34,7 +36,18 @@ class SearchEngine:
         self.reranker = None
         self.filter = ResultFilter()
 
+        # Searches run on FastAPI worker threads and the automation
+        # scheduler thread while uploads/deletes rebuild the index.
+        # The lock keeps a search from seeing a half-built index.
+        self._lock = threading.RLock()
+
     def load(self):
+
+        with self._lock:
+
+            self._load()
+
+    def _load(self):
 
         self.profiler.start("Loading Documents")
 
@@ -44,23 +57,51 @@ class SearchEngine:
             self.data_path
         )
 
-        self.processed_docs = pipeline.process()
+        processed_docs = pipeline.process()
 
-        self.documents = [
+        self.profiler.stop("Loading Documents")
+
+        if self.encoder is None:
+            self.encoder = EmbeddingEncoder()
+
+        if self.reranker is None:
+            self.logger.info("Loading Cross Encoder...")
+            self.reranker = RerankPipeline()
+
+        # ----------------------------------------------------
+        # Empty knowledge base: BM25 and FAISS cannot be built
+        # from zero documents, so search returns no results.
+        # ----------------------------------------------------
+
+        if not processed_docs:
+
+            self.logger.warning(
+                "Knowledge base is empty. Search will return "
+                "no results until documents are added."
+            )
+
+            self.processed_docs = []
+            self.documents = []
+            self.bm25 = None
+            self.indexer = None
+            self.searcher = None
+            self.hybrid = None
+
+            return
+
+        documents = [
             doc["text"]
-            for doc in self.processed_docs
+            for doc in processed_docs
         ]
 
         tokenized_docs = [
             doc["tokens"]
-            for doc in self.processed_docs
+            for doc in processed_docs
         ]
-
-        self.profiler.stop("Loading Documents")
 
         self.logger.info("Building BM25...")
 
-        self.bm25 = BM25Retriever(
+        bm25 = BM25Retriever(
             tokenized_docs
         )
 
@@ -68,10 +109,8 @@ class SearchEngine:
 
         self.logger.info("Encoding Documents...")
 
-        self.encoder = EmbeddingEncoder()
-
         embeddings = self.encoder.encode(
-            self.documents
+            documents
         )
 
         self.profiler.stop("Encoding")
@@ -80,31 +119,35 @@ class SearchEngine:
 
         self.logger.info("Building FAISS Index...")
 
-        self.indexer = FAISSIndexer(
+        indexer = FAISSIndexer(
             embeddings.shape[1]
         )
 
-        self.indexer.build(
+        indexer.build(
             embeddings
         )
 
         self.profiler.stop("Building FAISS")
 
-        self.searcher = SemanticSearcher(
+        searcher = SemanticSearcher(
             self.encoder,
-            self.indexer.index
+            indexer.index
         )
 
+        # Swap in the new index only when it is fully built.
+        self.processed_docs = processed_docs
+        self.documents = documents
+        self.bm25 = bm25
+        self.indexer = indexer
+        self.searcher = searcher
         self.hybrid = HybridSearch(
             self.bm25,
             self.searcher
         )
 
-        self.logger.info("Loading Cross Encoder...")
-
-        self.reranker = RerankPipeline()
-
-        self.logger.info("Search Engine Ready!")
+        self.logger.info(
+            f"Search Engine Ready! ({len(documents)} chunks)"
+        )
 
     def search(
         self,
@@ -114,9 +157,32 @@ class SearchEngine:
         page=None
     ):
 
+        if not query or not query.strip():
+            return []
+
+        with self._lock:
+
+            return self._search(
+                query,
+                source,
+                extension,
+                page
+            )
+
+    def _search(
+        self,
+        query,
+        source,
+        extension,
+        page
+    ):
+
+        if not self.documents:
+            return []
+
         stages = self.query_pipeline.process(query)
 
-        processed_query = stages["Domain Expanded"]
+        processed_query = stages["Domain Expanded"] or query
 
         self.logger.info("")
         self.logger.info("=" * 60)
@@ -157,6 +223,7 @@ class SearchEngine:
         dense_ids = [
             self.processed_docs[index]["id"]
             for index in indices
+            if index >= 0
         ]
 
         self.profiler.start("Hybrid Fusion")
@@ -169,32 +236,25 @@ class SearchEngine:
 
         self.profiler.stop("Hybrid Fusion")
 
+        # Optional metadata filters (source / extension / page).
+        if source or extension or page:
+
+            hybrid_results = self.filter.filter(
+                hybrid_results,
+                source=source,
+                extension=extension,
+                page=page
+            )
+
         self.profiler.start("Cross Encoder")
 
         final_results = self.reranker.rerank(
             processed_query,
-            hybrid_results
+            hybrid_results[:10]
         )
 
         self.profiler.stop("Cross Encoder")
 
-        # =====================================================
-        # TEMPORARY DEBUG (REMOVE AFTER TESTING)
-        # =====================================================
-
-        print()
-        print("=" * 60)
-        print("FINAL RESULTS STRUCTURE")
-        print("=" * 60)
-
-        for result in final_results:
-            print(result)
-
-        print("=" * 60)
-
-        # =====================================================
-
-        # Temporarily return without filtering
         self.profiler.report()
 
         return final_results

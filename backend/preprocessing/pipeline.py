@@ -1,31 +1,51 @@
-from backend.preprocessing.loader import DataLoader
+from backend.indexing import DocumentIndexer
 from backend.preprocessing.cleaner import TextCleaner
 from backend.preprocessing.tokenizer import Tokenizer
 
 
 class PreprocessingPipeline:
 
-    def __init__(self, file_path):
-        self.loader = DataLoader(file_path)
+    def __init__(self, folder_path):
+
+        self.folder_path = folder_path
+
+        self.indexer = DocumentIndexer()
+
         self.cleaner = TextCleaner()
+
         self.tokenizer = Tokenizer()
 
     def process(self):
 
-        documents = self.loader.load_documents()
+        # Load all documents from the folder
+        documents = self.indexer.index_folder(
+            self.folder_path
+        )
 
         processed = []
 
         for doc in documents:
 
-            cleaned = self.cleaner.clean(doc["text"])
+            cleaned = self.cleaner.clean(
+                doc["text"]
+            )
 
-            tokens = self.tokenizer.tokenize(cleaned)
+            tokens = self.tokenizer.tokenize(
+                cleaned
+            )
 
             processed.append({
+
                 "id": doc["id"],
+
                 "text": doc["text"],
-                "tokens": tokens
+
+                "tokens": tokens,
+
+                "source": doc.get("source"),
+
+                "page": doc.get("page")
+
             })
 
         return processed

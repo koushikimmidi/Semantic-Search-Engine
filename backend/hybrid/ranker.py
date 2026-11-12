@@ -12,16 +12,12 @@ class ResultRanker:
                 if doc["id"] == doc_id
             )
 
-            ranked_documents.append({
+            doc_copy = document.copy()
 
-                "rank": rank,
+            doc_copy["rank"] = rank
 
-                "id": doc_id,
+            doc_copy["score"] = score
 
-                "score": score,
-
-                "text": document["text"]
-
-            })
+            ranked_documents.append(doc_copy)
 
         return ranked_documents

@@ -22,3 +22,12 @@ venv/
 # OS Files
 .DS_Store
 Thumbs.db
+# Secrets
+.env
+
+# Python virtual environments
+.venv/
+
+# Runtime state
+data/automation/
+data/cache/

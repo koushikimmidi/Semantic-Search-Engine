@@ -1,0 +1,181 @@
+:root {
+    /* Premium Typography */
+    --font-header: 'Outfit', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+    --font-body: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+
+    /* Light Theme (Clean Glassmorphic Slate) */
+    --bg-primary: #f8fafc;
+    --bg-secondary: #ffffff;
+    --surface: rgba(255, 255, 255, 0.8);
+    --surface-strong: #f1f5f9;
+    --sidebar-bg: #f1f5f9;
+    --border: rgba(226, 232, 240, 0.7);
+    --border-hover: rgba(203, 213, 225, 0.9);
+    
+    --text-primary: #0f172a;
+    --text-secondary: #475569;
+    --text-body: #1e293b;
+    --input-text: #0f172a;
+    
+    --accent: #4f46e5;
+    --accent-hover: #3730a3;
+    --accent-glow: rgba(79, 70, 229, 0.12);
+    --accent-gradient: linear-gradient(135deg, #6366f1, #3b82f6);
+    --soft-accent: #f5f3ff;
+    --soft-border: #ddd6fe;
+
+    --card-shadow: 0 8px 30px rgba(0, 0, 0, 0.02);
+}
+
+.dark-mode {
+    /* Dark Theme (Deep Space / Neon Glassmorphism) */
+    --bg-primary: #05070c;
+    --bg-secondary: #0b0f19;
+    --surface: rgba(11, 15, 25, 0.7);
+    --surface-strong: #111827;
+    --sidebar-bg: #03050a;
+    --border: rgba(255, 255, 255, 0.06);
+    --border-hover: rgba(255, 255, 255, 0.12);
+    
+    --text-primary: #f8fafc;
+    --text-secondary: #94a3b8;
+    --text-body: #cbd5e1;
+    --input-text: #f8fafc;
+    
+    --accent: #6366f1;
+    --accent-hover: #818cf8;
+    --accent-glow: rgba(99, 102, 241, 0.25);
+    --accent-gradient: linear-gradient(135deg, #818cf8, #38bdf8);
+    --soft-accent: rgba(99, 102, 241, 0.08);
+    --soft-border: rgba(99, 102, 241, 0.2);
+
+    --card-shadow: 0 12px 40px rgba(0, 0, 0, 0.3);
+}
+
+/* Global Reset */
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+html {
+    scroll-behavior: smooth;
+    font-size: 16px;
+}
+
+body {
+    font-family: var(--font-body);
+    background-color: var(--bg-primary);
+    color: var(--text-body);
+    min-height: 100vh;
+    overflow-x: hidden;
+    line-height: 1.6;
+    transition: background-color 0.4s ease, color 0.4s ease;
+    
+    /* Elegant dot-grid pattern background */
+    background-image: radial-gradient(var(--border) 1px, transparent 0);
+    background-size: 24px 24px;
+}
+
+#root {
+    min-height: 100vh;
+}
+
+/* Core Split Layout */
+.app-container {
+    display: flex;
+    min-height: 100vh;
+    width: 100vw;
+    overflow: hidden;
+    background-color: var(--bg-primary);
+}
+
+.main-content {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    height: 100vh;
+    overflow-y: auto;
+    background-color: transparent;
+    position: relative;
+    padding-bottom: 60px;
+}
+
+/* Glassmorphic Card base class */
+.card {
+    background: var(--surface);
+    backdrop-filter: blur(16px);
+    -webkit-backdrop-filter: blur(16px);
+    border: 1px solid var(--border);
+    border-radius: 18px;
+    padding: 24px;
+    box-shadow: var(--card-shadow);
+    transition: background 0.35s ease, border-color 0.35s ease, box-shadow 0.35s ease;
+}
+
+.card:hover {
+    border-color: var(--border-hover);
+}
+
+/* Scrollbar Customization */
+::-webkit-scrollbar {
+    width: 6px;
+    height: 6px;
+}
+
+::-webkit-scrollbar-track {
+    background: transparent;
+}
+
+::-webkit-scrollbar-thumb {
+    background: var(--border);
+    border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+    background: var(--text-secondary);
+}
+
+/* Global Animations */
+@keyframes fadeIn {
+    from { opacity: 0; }
+    to { opacity: 1; }
+}
+
+@keyframes slideUp {
+    from {
+        opacity: 0;
+        transform: translateY(16px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+@keyframes slideDown {
+    from {
+        opacity: 0;
+        transform: translateY(-12px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+@keyframes pulseGlow {
+    0%, 100% { box-shadow: 0 0 15px rgba(99, 102, 241, 0.15); }
+    50% { box-shadow: 0 0 25px rgba(99, 102, 241, 0.3); }
+}
+
+/* Accessibility */
+@media (prefers-reduced-motion: reduce) {
+    * {
+        scroll-behavior: auto !important;
+        animation-duration: 0.01ms !important;
+        animation-iteration-count: 1 !important;
+        transition-duration: 0.01ms !important;
+    }
+}

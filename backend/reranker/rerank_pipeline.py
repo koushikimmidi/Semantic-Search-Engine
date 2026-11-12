@@ -1,4 +1,4 @@
-from backend.reranker import CrossEncoderRanker
+from backend.reranker.cross_encoder import CrossEncoderRanker
 
 
 class RerankPipeline:
@@ -13,52 +13,37 @@ class RerankPipeline:
         ranked_results
     ):
 
+        if not ranked_results:
+            return []
+
         documents = [
-
             result["text"]
-
             for result in ranked_results
-
         ]
 
-        ranked = self.cross_encoder.rerank(
-
+        scores = self.cross_encoder.score(
             query,
-
             documents
+        )
 
+        # Pair each score with its own result (by position), so
+        # chunks with identical text are never merged or dropped.
+        scored = sorted(
+            zip(ranked_results, scores),
+            key=lambda item: item[1],
+            reverse=True
         )
 
         reranked = []
 
-        for rank, (document, score) in enumerate(
+        for rank, (result, score) in enumerate(scored, start=1):
 
-            ranked,
+            res_copy = result.copy()
 
-            start=1
+            res_copy["rank"] = rank
 
-        ):
+            res_copy["cross_score"] = float(score)
 
-            for result in ranked_results:
-
-                if result["text"] == document:
-
-                    reranked.append(
-
-                        {
-
-                            "rank": rank,
-
-                            "id": result["id"],
-
-                            "text": document,
-
-                            "cross_score": float(score)
-
-                        }
-
-                    )
-
-                    break
+            reranked.append(res_copy)
 
         return reranked
