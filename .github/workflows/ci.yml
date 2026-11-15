@@ -14,9 +14,9 @@ jobs:
       # CPU-only torch keeps the install small and fast.
       PIP_EXTRA_INDEX_URL: https://download.pytorch.org/whl/cpu
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
 
-      - uses: actions/setup-python@v5
+      - uses: actions/setup-python@v6
         with:
           python-version: "3.13"
           cache: pip
@@ -40,9 +40,9 @@ jobs:
       run:
         working-directory: semantic-search-frontend
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
 
-      - uses: actions/setup-node@v4
+      - uses: actions/setup-node@v5
         with:
           node-version: "24"
           cache: npm
@@ -57,7 +57,7 @@ jobs:
     runs-on: ubuntu-latest
     needs: [backend, frontend]
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
       - name: Validate compose file
         run: docker compose config --quiet
       - name: Build images
