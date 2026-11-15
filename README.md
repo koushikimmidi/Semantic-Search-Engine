@@ -11,6 +11,7 @@ and hands only the uncertain ones to a person.**
 ![React](https://img.shields.io/badge/React-19-61DAFB?logo=react&logoColor=black)
 ![Ollama](https://img.shields.io/badge/LLM-Ollama%20(local)-1f1e1c)
 ![Docker](https://img.shields.io/badge/Docker-ready-2496ED?logo=docker&logoColor=white)
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
 
 <img src="docs/images/02-ask.png" alt="Ask page: a grounded answer with numbered citations next to its sources" width="900">
 
@@ -38,6 +39,7 @@ and hands only the uncertain ones to a person.**
 - [Troubleshooting](#troubleshooting)
 - [Security](#security)
 - [Roadmap](#roadmap)
+- [License](#license)
 
 ---
 
@@ -508,6 +510,11 @@ Auto-replies, mark-as-read and the schedule can also be changed at runtime in **
 - Answer-faithfulness check before auto-sending
 - Multi-turn conversations and multilingual support
 - More channels: website chat widget, WhatsApp, Telegram, Slack
+
+## License
+
+Released under the [MIT License](LICENSE). You are free to use, modify and distribute this
+project, including commercially, as long as the copyright notice is kept.
 
 ---
 
