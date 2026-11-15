@@ -1,83 +1,37 @@
+import { FileText } from "lucide-react";
 
-import "../styles/source.css";
-
-function SourceCard({ sources, onSelectSource }) {
-
-    if (!sources || sources.length === 0) {
-        return null;
-    }
-
+function SourceCard({ sources, loading, onSelectSource }) {
     return (
-
-        <section className="sources-section">
-
-            <div className="sources-header">
-
-                <div>
-
-                    <h2>
-                        Sources
-                    </h2>
-
-                    <p>
-                        Retrieved document sections used to generate answer
-                    </p>
-
-                </div>
-
-                <div className="source-count">
-
-                    {sources.length}
-                    {" "}
-                    {sources.length === 1 ? "Source" : "Sources"}
-
-                </div>
-
+        <aside className="sources" aria-label="Sources">
+            <div className="sources-head">
+                <h2>Sources</h2>
+                {!loading && <span className="faint small">{sources.length}</span>}
             </div>
 
-            <div className="sources-list">
-
-                {sources.map((source, index) => (
-
-                    <article
-                        className="source-card"
-                        key={`${source.id}-${index}`}
-                        onClick={() => onSelectSource && onSelectSource(source)}
-                        title="Click to view full chunk content"
-                    >
-
-                        <div className="source-top">
-
-                            <div className="source-file-icon">
-                                📄
-                            </div>
-
-                            <div className="source-file-info">
-
-                                <h3>
-                                    {source.source || "Unknown Document"}
-                                </h3>
-
-                                <span className="source-rank">
-                                    [{index + 1}] • Page {source.page ?? 1} • Chunk {source.chunk ?? index + 1}
+            {loading ? (
+                <div className="skeleton"><span /><span /><span style={{ width: "60%" }} /></div>
+            ) : sources.length === 0 ? (
+                <p className="faint small">No matching documents.</p>
+            ) : (
+                <ol className="source-list">
+                    {sources.map((source, index) => (
+                        <li key={`${source.id}-${index}`}>
+                            <button onClick={() => onSelectSource(source, index)}>
+                                <span className="source-num">{index + 1}</span>
+                                <span className="source-body">
+                                    <span className="source-name">
+                                        <FileText size={13} />
+                                        {source.source?.split("/").pop() || "Document"}
+                                        <span className="faint">· p. {source.page ?? 1}</span>
+                                    </span>
+                                    <span className="source-snippet">{source.text}</span>
                                 </span>
-
-                            </div>
-
-                        </div>
-
-                        <p className="source-preview">
-                            {source.text}
-                        </p>
-
-                    </article>
-
-                ))}
-
-            </div>
-
-        </section>
-
+                            </button>
+                        </li>
+                    ))}
+                </ol>
+            )}
+        </aside>
     );
 }
 

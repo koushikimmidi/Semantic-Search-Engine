@@ -1,4 +1,5 @@
 import re
+import time
 
 from backend.engine.search_engine import SearchEngine
 from backend.rag.rag_pipeline import RAGPipeline, strip_citations
@@ -59,7 +60,8 @@ class AutomationService:
         rag_pipeline=None,
         email_fetcher=None,
         escalation_manager=None,
-        email_sender=None
+        email_sender=None,
+        event_store=None
     ):
 
         self.send_emails = send_emails
@@ -81,6 +83,9 @@ class AutomationService:
         self.escalation_manager = escalation_manager or EscalationManager()
 
         self.email_fetcher = email_fetcher or EmailFetcher()
+
+        # Optional analytics logger (see backend/analytics).
+        self.event_store = event_store
 
     # ========================================================
     # HELPERS
@@ -116,7 +121,37 @@ class AutomationService:
     # PROCESS MESSAGE
     # ========================================================
 
-    def process_message(
+    def process_message(self, message, channel="inbox"):
+        """
+        Process one email and record it for analytics. `channel` is
+        "inbox" for Gmail and "test" for messages from the UI.
+        """
+
+        started = time.perf_counter()
+
+        try:
+            result = self._process_message(message)
+        except Exception as e:
+            # Record the failure, then let the caller handle it.
+            if self.event_store is not None and message:
+                self.event_store.log_email(
+                    channel, message,
+                    {"success": False, "route": "FAILED", "error": str(e)},
+                    (time.perf_counter() - started) * 1000
+                )
+            raise
+
+        if self.event_store is not None and message:
+            self.event_store.log_email(
+                channel,
+                message,
+                result,
+                (time.perf_counter() - started) * 1000
+            )
+
+        return result
+
+    def _process_message(
         self,
         message
     ):
@@ -246,7 +281,7 @@ class AutomationService:
     # HUMAN REPLY FROM THE REVIEW QUEUE
     # ========================================================
 
-    def send_human_reply(self, escalation_id, reply_text, agent_note=None):
+    def send_human_reply(self, escalation_id, reply_text, agent_note=None, resolved_by=None):
         """
         Send an agent-approved reply for a queued message (threaded
         under the original email) and mark the item resolved.
@@ -282,7 +317,8 @@ class AutomationService:
         record = self.escalation_manager.resolve(
             escalation_id,
             agent_note or "Replied by support agent.",
-            reply=reply_text
+            reply=reply_text,
+            resolved_by=resolved_by
         )
 
         return {"success": True, "email": email_result, "escalation": record}

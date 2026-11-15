@@ -1,93 +1,53 @@
-import { useState, useEffect, useCallback } from "react";
+import { useCallback, useEffect, useState } from "react";
+import { Play, RefreshCw, Square } from "lucide-react";
 import {
     getAutomationDashboard,
     getAutomationHistory,
+    processTestMessage,
     runAutomation,
     startScheduler,
-    stopScheduler,
-    processTestMessage,
-    getEscalations,
-    resolveEscalation,
-    replyToEscalation
+    stopScheduler
 } from "../services/api";
-import "../styles/document-manager.css";
-import "../styles/automation.css";
+import { Notice } from "./ui";
+import { formatDateTime, formatIntent } from "../utils/format";
+import "../styles/work.css";
 
-function formatIntent(intent) {
-    if (!intent) return "—";
-    return intent
-        .toLowerCase()
-        .split("_")
-        .map((word) => word.charAt(0).toUpperCase() + word.slice(1))
-        .join(" ");
-}
+const ROUTE_LABEL = {
+    AUTO_REPLY: ["ok", "Would be answered automatically"],
+    HUMAN_REVIEW: ["warn", "Sent to the review queue"],
+    SKIPPED: ["", "Skipped (automated email)"]
+};
 
-function formatTime(iso) {
-    if (!iso) return "—";
-    const date = new Date(iso);
-    if (Number.isNaN(date.getTime())) return iso;
-    return date.toLocaleString(undefined, {
-        month: "short",
-        day: "numeric",
-        hour: "2-digit",
-        minute: "2-digit"
-    });
-}
-
-function RouteBadge({ route }) {
-    if (!route) return null;
-    const isAuto = route === "AUTO_REPLY";
-    return (
-        <span className={`auto-badge ${isAuto ? "auto" : "review"}`}>
-            {isAuto ? "Auto reply" : "Human review"}
-        </span>
-    );
-}
-
-function AutomationDashboard() {
+/**
+ * Admins: inbox controls, scheduler, test messages, run history.
+ * Employees: test messages and run history.
+ */
+function AutomationDashboard({ isAdmin = false, onChange }) {
     const [dashboard, setDashboard] = useState(null);
     const [history, setHistory] = useState([]);
-    const [escalations, setEscalations] = useState([]);
-    const [showResolved, setShowResolved] = useState(false);
-    const [loading, setLoading] = useState(true);
     const [error, setError] = useState("");
-
     const [running, setRunning] = useState(false);
-    const [runMessage, setRunMessage] = useState("");
+    const [runResult, setRunResult] = useState(null);
     const [schedulerBusy, setSchedulerBusy] = useState(false);
 
-    const [testMessage, setTestMessage] = useState({
+    const [test, setTest] = useState({
         sender: "student@example.com",
         subject: "Refund request",
-        body: "What is the refund period for my course?"
+        body: "How many days do I have to ask for a refund?"
     });
     const [testing, setTesting] = useState(false);
     const [testResult, setTestResult] = useState(null);
 
-    const [notes, setNotes] = useState({});
-    const [replies, setReplies] = useState({});
-    const [replyOpen, setReplyOpen] = useState(null);
-    const [sendingId, setSendingId] = useState(null);
-    const [queueMessage, setQueueMessage] = useState("");
-
     const refresh = useCallback(async () => {
         try {
-            const [dashboardData, historyData, escalationData] = await Promise.all([
-                getAutomationDashboard(),
-                getAutomationHistory(),
-                getEscalations(showResolved ? null : "PENDING")
-            ]);
-            setDashboard(dashboardData.dashboard);
-            setHistory((historyData.history || []).slice().reverse());
-            setEscalations(escalationData.escalations || []);
+            const [d, h] = await Promise.all([getAutomationDashboard(), getAutomationHistory()]);
+            setDashboard(d.dashboard);
+            setHistory((h.history || []).slice().reverse());
             setError("");
         } catch (err) {
-            console.error(err);
-            setError(err.message || "Could not reach the automation API.");
-        } finally {
-            setLoading(false);
+            setError(err.message);
         }
-    }, [showResolved]);
+    }, []);
 
     useEffect(() => {
         const initial = setTimeout(refresh, 0);
@@ -98,33 +58,26 @@ function AutomationDashboard() {
         };
     }, [refresh]);
 
-    async function handleRun() {
+    async function checkInbox() {
         setRunning(true);
-        setRunMessage("");
+        setRunResult(null);
         try {
-            const data = await runAutomation();
-            const s = data.summary || {};
-            setRunMessage(
-                `Fetched ${s.fetched ?? 0}, processed ${s.processed ?? 0}, ` +
-                `skipped ${s.skipped ?? 0} · ${s.auto_reply ?? 0} auto reply, ` +
-                `${s.human_review ?? 0} human review, ${s.failed ?? 0} failed.`
-            );
+            const { summary } = await runAutomation();
+            setRunResult({ tone: "ok", summary });
         } catch (err) {
-            setRunMessage(`Run failed: ${err.message}`);
+            setRunResult({ tone: "bad", text: err.message });
         } finally {
             setRunning(false);
             refresh();
+            onChange && onChange();
         }
     }
 
-    async function handleScheduler() {
+    async function toggleScheduler() {
         setSchedulerBusy(true);
         try {
-            if (dashboard?.scheduler?.running) {
-                await stopScheduler();
-            } else {
-                await startScheduler();
-            }
+            if (dashboard?.scheduler?.running) await stopScheduler();
+            else await startScheduler();
         } catch (err) {
             setError(err.message);
         } finally {
@@ -133,341 +86,208 @@ function AutomationDashboard() {
         }
     }
 
-    async function handleTest(event) {
+    async function runTest(event) {
         event.preventDefault();
-        if (!testMessage.body.trim()) return;
+        if (!test.body.trim()) return;
         setTesting(true);
         setTestResult(null);
         try {
-            const data = await processTestMessage(testMessage);
-            setTestResult(data);
+            setTestResult(await processTestMessage(test));
         } catch (err) {
             setTestResult({ error: err.message });
         } finally {
             setTesting(false);
             refresh();
+            onChange && onChange();
         }
     }
 
-    function openReply(item) {
-        setReplyOpen(item.id);
-        setQueueMessage("");
-        setReplies((current) => (
-            current[item.id] !== undefined
-                ? current
-                : { ...current, [item.id]: item.suggested_answer || "" }
-        ));
-    }
-
-    async function handleSendReply(item) {
-        setSendingId(item.id);
-        setQueueMessage("");
-        try {
-            await replyToEscalation(item.id, replies[item.id], notes[item.id]);
-            setQueueMessage(`Reply sent to ${item.sender_email || item.sender}.`);
-            setReplyOpen(null);
-        } catch (err) {
-            setQueueMessage(`Reply not sent: ${err.message}`);
-        } finally {
-            setSendingId(null);
-            refresh();
-        }
-    }
-
-    async function handleResolve(id) {
-        try {
-            await resolveEscalation(id, notes[id]);
-            setNotes((current) => {
-                const next = { ...current };
-                delete next[id];
-                return next;
-            });
-        } catch (err) {
-            setError(err.message);
-        } finally {
-            refresh();
-        }
-    }
-
-    const stats = dashboard
-        ? [
-            { label: "Runs", value: dashboard.total_executions },
-            { label: "Emails fetched", value: dashboard.total_fetched },
-            { label: "Processed", value: dashboard.total_processed },
-            { label: "Auto replies", value: dashboard.total_auto_reply },
-            { label: "Human review", value: dashboard.total_human_review },
-            { label: "Pending reviews", value: dashboard.pending_reviews ?? 0, highlight: true },
-            { label: "Success rate", value: `${dashboard.success_rate}%` }
-        ]
-        : [];
-
-    const schedulerRunning = Boolean(dashboard?.scheduler?.running);
+    const schedulerOn = Boolean(dashboard?.scheduler?.running);
+    const [routeTone, routeText] = ROUTE_LABEL[testResult?.route] || ["", testResult?.route];
 
     return (
-        <section className="doc-manager-section automation-section">
-            <div className="doc-manager-header">
-                <h2>Email Automation</h2>
-                <p>
-                    Reads unread support emails, answers them from the knowledge base, and
-                    routes low-confidence messages to a human review queue.
-                </p>
+        <div className="page">
+            <div className="page-head">
+                <div>
+                    <h1>{isAdmin ? "Email automation" : "Test a message"}</h1>
+                    <p>
+                        {isAdmin
+                            ? "Check the support inbox, run it on a schedule, and see how messages would be handled."
+                            : "See how the assistant would handle an email. Nothing is sent."}
+                    </p>
+                </div>
             </div>
 
-            {error && <div className="auto-error">{error}</div>}
+            {error && <Notice tone="bad">{error}</Notice>}
 
-            {loading ? (
-                <div className="card auto-empty">Loading automation status…</div>
-            ) : (
-                <>
-                    <div className="auto-stats">
-                        {stats.map((stat) => (
-                            <div
-                                key={stat.label}
-                                className={`card auto-stat ${stat.highlight && stat.value > 0 ? "highlight" : ""}`}
-                            >
-                                <span className="auto-stat-label">{stat.label}</span>
-                                <strong className="auto-stat-value">{stat.value}</strong>
-                            </div>
-                        ))}
+            {isAdmin && dashboard && (
+                <div className="metrics">
+                    <div className="metric">
+                        <div className="metric-label">Inbox checks</div>
+                        <div className="metric-value">{dashboard.total_executions}</div>
                     </div>
-
-                    <div className="auto-grid">
-                        <div className="card">
-                            <h3>Inbox controls</h3>
-                            <p className="subtitle">
-                                Email sending is{" "}
-                                <strong>{dashboard?.email_sending ? "ON" : "OFF (safe mode)"}</strong>.
-                                {!dashboard?.email_sending && " Answers are generated but not sent."}
-                            </p>
-
-                            <div className="auto-controls">
-                                <button
-                                    className="auto-btn primary"
-                                    onClick={handleRun}
-                                    disabled={running}
-                                >
-                                    {running ? "Checking inbox…" : "Check inbox now"}
-                                </button>
-
-                                <button
-                                    className={`auto-btn ${schedulerRunning ? "danger" : ""}`}
-                                    onClick={handleScheduler}
-                                    disabled={schedulerBusy}
-                                >
-                                    {schedulerRunning ? "Stop scheduler" : "Start scheduler"}
-                                </button>
-                            </div>
-
-                            <div className="auto-scheduler-status">
-                                <span className={`status-dot ${schedulerRunning ? "online" : "offline"}`}></span>
-                                Scheduler {schedulerRunning ? "running" : "stopped"} · every{" "}
-                                {dashboard?.scheduler?.interval_seconds ?? "—"}s
-                            </div>
-
-                            {runMessage && <p className="auto-run-message">{runMessage}</p>}
-                        </div>
-
-                        <form className="card" onSubmit={handleTest}>
-                            <h3>Test a message</h3>
-                            <p className="subtitle">
-                                Runs one email through the pipeline without touching Gmail.
-                            </p>
-
-                            <label className="auto-field">
-                                <span>From</span>
-                                <input
-                                    value={testMessage.sender}
-                                    onChange={(e) => setTestMessage({ ...testMessage, sender: e.target.value })}
-                                />
-                            </label>
-                            <label className="auto-field">
-                                <span>Subject</span>
-                                <input
-                                    value={testMessage.subject}
-                                    onChange={(e) => setTestMessage({ ...testMessage, subject: e.target.value })}
-                                />
-                            </label>
-                            <label className="auto-field">
-                                <span>Message</span>
-                                <textarea
-                                    rows={3}
-                                    value={testMessage.body}
-                                    onChange={(e) => setTestMessage({ ...testMessage, body: e.target.value })}
-                                />
-                            </label>
-
-                            <button className="auto-btn primary" type="submit" disabled={testing}>
-                                {testing ? "Processing…" : "Process message"}
-                            </button>
-
-                            {testResult && (
-                                <div className="auto-test-result">
-                                    {testResult.error ? (
-                                        <p className="auto-error-text">{testResult.error}</p>
-                                    ) : (
-                                        <>
-                                            <div className="auto-test-row">
-                                                <RouteBadge route={testResult.route} />
-                                                <span>Intent: {formatIntent(testResult.intent?.intent)}</span>
-                                                <span>Confidence: {testResult.confidence?.level ?? "—"}</span>
-                                            </div>
-                                            <p className="auto-answer">{testResult.answer}</p>
-                                            {testResult.confidence?.reason && (
-                                                <p className="auto-reason">{testResult.confidence.reason}</p>
-                                            )}
-                                        </>
-                                    )}
-                                </div>
-                            )}
-                        </form>
+                    <div className="metric">
+                        <div className="metric-label">Emails read</div>
+                        <div className="metric-value">{dashboard.total_fetched}</div>
                     </div>
-
-                    <div className="card auto-queue">
-                        <div className="auto-queue-header">
-                            <div>
-                                <h3>Human review queue</h3>
-                                <p className="subtitle">
-                                    Messages the system was not confident enough to answer automatically.
-                                </p>
-                            </div>
-                            <label className="auto-toggle">
-                                <input
-                                    type="checkbox"
-                                    checked={showResolved}
-                                    onChange={(e) => setShowResolved(e.target.checked)}
-                                />
-                                Show resolved
-                            </label>
-                        </div>
-
-                        {queueMessage && <p className="auto-run-message">{queueMessage}</p>}
-
-                        {escalations.length === 0 ? (
-                            <div className="auto-empty">No messages waiting for review.</div>
-                        ) : (
-                            <div className="auto-queue-list">
-                                {escalations.map((item) => (
-                                    <article key={item.id} className="auto-queue-item">
-                                        <header>
-                                            <div>
-                                                <strong>{item.subject || "(no subject)"}</strong>
-                                                <span className="auto-meta">
-                                                    {item.sender} · {formatTime(item.timestamp)} ·{" "}
-                                                    {formatIntent(item.intent?.intent)}
-                                                </span>
-                                            </div>
-                                            <span className={`auto-badge ${item.status === "PENDING" ? "review" : "auto"}`}>
-                                                {item.status === "PENDING" ? "Pending" : "Resolved"}
-                                            </span>
-                                        </header>
-
-                                        <p className="auto-body">{item.body}</p>
-
-                                        {item.suggested_answer && (
-                                            <p className="auto-suggested">
-                                                <span>Suggested answer:</span> {item.suggested_answer}
-                                            </p>
-                                        )}
-
-                                        <p className="auto-reason">{item.confidence?.reason || item.reason}</p>
-
-                                        {item.status === "PENDING" && replyOpen === item.id && (
-                                            <div className="auto-reply-box">
-                                                <label className="auto-field">
-                                                    <span>Reply to {item.sender_email || item.sender} (sent in the same email thread)</span>
-                                                    <textarea
-                                                        rows={4}
-                                                        value={replies[item.id] ?? ""}
-                                                        onChange={(e) => setReplies({ ...replies, [item.id]: e.target.value })}
-                                                    />
-                                                </label>
-                                                <div className="auto-controls">
-                                                    <button
-                                                        className="auto-btn primary"
-                                                        onClick={() => handleSendReply(item)}
-                                                        disabled={sendingId === item.id || !(replies[item.id] || "").trim()}
-                                                    >
-                                                        {sendingId === item.id ? "Sending…" : "Send reply"}
-                                                    </button>
-                                                    <button className="auto-btn" onClick={() => setReplyOpen(null)}>
-                                                        Cancel
-                                                    </button>
-                                                </div>
-                                            </div>
-                                        )}
-
-                                        {item.status === "PENDING" ? (
-                                            <div className="auto-resolve">
-                                                <input
-                                                    placeholder="Resolution note (optional)"
-                                                    value={notes[item.id] || ""}
-                                                    onChange={(e) => setNotes({ ...notes, [item.id]: e.target.value })}
-                                                />
-                                                {replyOpen !== item.id && (
-                                                    <button className="auto-btn primary" onClick={() => openReply(item)}>
-                                                        Reply
-                                                    </button>
-                                                )}
-                                                <button className="auto-btn" onClick={() => handleResolve(item.id)}>
-                                                    Mark resolved
-                                                </button>
-                                            </div>
-                                        ) : (
-                                            <>
-                                                {item.reply && (
-                                                    <p className="auto-suggested"><span>Sent reply:</span> {item.reply}</p>
-                                                )}
-                                                {item.resolution_note && (
-                                                    <p className="auto-reason">Note: {item.resolution_note}</p>
-                                                )}
-                                            </>
-                                        )}
-                                    </article>
-                                ))}
-                            </div>
-                        )}
+                    <div className="metric">
+                        <div className="metric-label">Answered automatically</div>
+                        <div className="metric-value">{dashboard.total_auto_reply}</div>
                     </div>
-
-                    <div className="card">
-                        <h3>Run history</h3>
-                        <p className="subtitle">The 15 most recent inbox checks.</p>
-
-                        {history.length === 0 ? (
-                            <div className="auto-empty">No runs yet.</div>
-                        ) : (
-                            <div className="auto-table-wrap">
-                                <table className="auto-table">
-                                    <thead>
-                                        <tr>
-                                            <th>Time</th>
-                                            <th>Fetched</th>
-                                            <th>Processed</th>
-                                            <th>Skipped</th>
-                                            <th>Auto reply</th>
-                                            <th>Review</th>
-                                            <th>Failed</th>
-                                        </tr>
-                                    </thead>
-                                    <tbody>
-                                        {history.slice(0, 15).map((row) => (
-                                            <tr key={row.timestamp}>
-                                                <td>{formatTime(row.timestamp)}</td>
-                                                <td>{row.fetched}</td>
-                                                <td>{row.processed}</td>
-                                                <td>{row.skipped}</td>
-                                                <td>{row.auto_reply}</td>
-                                                <td>{row.human_review}</td>
-                                                <td>{row.failed}</td>
-                                            </tr>
-                                        ))}
-                                    </tbody>
-                                </table>
-                            </div>
-                        )}
+                    <div className="metric">
+                        <div className="metric-label">Sent to people</div>
+                        <div className="metric-value">{dashboard.total_human_review}</div>
                     </div>
-                </>
+                    <div className={`metric ${dashboard.pending_reviews ? "attention" : ""}`}>
+                        <div className="metric-label">Waiting for review</div>
+                        <div className="metric-value">{dashboard.pending_reviews ?? 0}</div>
+                    </div>
+                </div>
             )}
-        </section>
+
+            <div className={isAdmin ? "grid-2" : ""} style={isAdmin ? undefined : { maxWidth: 680 }}>
+                {isAdmin && (
+                    <div className="card">
+                        <div className="card-head">
+                            <div>
+                                <div className="section-title">Inbox</div>
+                                <div className="section-sub">
+                                    Automatic replies are {dashboard?.email_sending ? <strong>on</strong> : <strong>off</strong>}.
+                                    {!dashboard?.email_sending && " Answers are written but not sent. Change this in System."}
+                                </div>
+                            </div>
+                        </div>
+                        <div className="card-body stack">
+                            <div className="setting">
+                                <div>
+                                    <strong>Check now</strong>
+                                    <p>Read unread emails and handle them once.</p>
+                                </div>
+                                <button className="btn btn-primary" onClick={checkInbox} disabled={running}>
+                                    <RefreshCw size={14} className={running ? "spin" : ""} />
+                                    {running ? "Checking…" : "Check inbox"}
+                                </button>
+                            </div>
+                            <div className="setting">
+                                <div>
+                                    <strong>Scheduler</strong>
+                                    <p>
+                                        <span className={`status ${schedulerOn ? "ok" : ""}`}>{schedulerOn ? "Running" : "Stopped"}</span>
+                                        <span className="faint"> · every {Math.round((dashboard?.scheduler?.interval_seconds || 0) / 60)} min</span>
+                                    </p>
+                                </div>
+                                <button className="btn" onClick={toggleScheduler} disabled={schedulerBusy}>
+                                    {schedulerOn ? <Square size={13} /> : <Play size={13} />}
+                                    {schedulerOn ? "Stop" : "Start"}
+                                </button>
+                            </div>
+                            {runResult && (
+                                runResult.tone === "bad" ? (
+                                    <Notice tone="bad">{runResult.text}</Notice>
+                                ) : (
+                                    <Notice tone="ok">
+                                        Read {runResult.summary.fetched} · handled {runResult.summary.processed} ·
+                                        skipped {runResult.summary.skipped} — {runResult.summary.auto_reply} automatic,
+                                        {" "}{runResult.summary.human_review} to review, {runResult.summary.failed} failed.
+                                    </Notice>
+                                )
+                            )}
+                        </div>
+                    </div>
+                )}
+
+                <form className="card" onSubmit={runTest}>
+                    <div className="card-head">
+                        <div>
+                            <div className="section-title">Try a message</div>
+                            <div className="section-sub">Runs the full pipeline without touching Gmail.</div>
+                        </div>
+                    </div>
+                    <div className="card-body stack">
+                        <div className="grid-2" style={{ gap: 12 }}>
+                            <label className="field">
+                                <span>From</span>
+                                <input value={test.sender} onChange={(e) => setTest({ ...test, sender: e.target.value })} />
+                            </label>
+                            <label className="field">
+                                <span>Subject</span>
+                                <input value={test.subject} onChange={(e) => setTest({ ...test, subject: e.target.value })} />
+                            </label>
+                        </div>
+                        <label className="field">
+                            <span>Message</span>
+                            <textarea rows={3} value={test.body} onChange={(e) => setTest({ ...test, body: e.target.value })} />
+                        </label>
+                        <div>
+                            <button className="btn btn-primary" type="submit" disabled={testing}>
+                                {testing ? "Processing…" : "Run"}
+                            </button>
+                        </div>
+
+                        {testResult && (
+                            testResult.error ? (
+                                <Notice tone="bad">{testResult.error}</Notice>
+                            ) : (
+                                <div className="result-block">
+                                    <div className="row">
+                                        <span className={`status ${routeTone}`}>{routeText}</span>
+                                        <span className="tag">{formatIntent(testResult.intent?.intent)}</span>
+                                        {testResult.confidence?.level && (
+                                            <span className="faint small">{testResult.confidence.level.toLowerCase()} confidence</span>
+                                        )}
+                                    </div>
+                                    <p>{testResult.email_body || testResult.answer}</p>
+                                    {testResult.confidence?.reason && <div className="small faint">{testResult.confidence.reason}</div>}
+                                </div>
+                            )
+                        )}
+                    </div>
+                </form>
+            </div>
+
+            <div className="card">
+                <div className="card-head">
+                    <div>
+                        <div className="section-title">Recent inbox checks</div>
+                        <div className="section-sub">Scheduled and manual runs.</div>
+                    </div>
+                </div>
+                <div className="card-body" style={{ padding: "8px 4px 4px" }}>
+                    {history.length === 0 ? (
+                        <p className="empty">No inbox checks yet.</p>
+                    ) : (
+                        <div className="table-wrap">
+                            <table className="table">
+                                <thead>
+                                    <tr>
+                                        <th>When</th>
+                                        <th className="right">Read</th>
+                                        <th className="right">Handled</th>
+                                        <th className="right">Skipped</th>
+                                        <th className="right">Automatic</th>
+                                        <th className="right">To review</th>
+                                        <th className="right">Failed</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {history.slice(0, 12).map((row) => (
+                                        <tr key={row.timestamp}>
+                                            <td>{formatDateTime(row.timestamp)}</td>
+                                            <td className="right">{row.fetched}</td>
+                                            <td className="right">{row.processed}</td>
+                                            <td className="right">{row.skipped}</td>
+                                            <td className="right">{row.auto_reply}</td>
+                                            <td className="right">{row.human_review}</td>
+                                            <td className="right">{row.failed}</td>
+                                        </tr>
+                                    ))}
+                                </tbody>
+                            </table>
+                        </div>
+                    )}
+                </div>
+            </div>
+        </div>
     );
 }
 

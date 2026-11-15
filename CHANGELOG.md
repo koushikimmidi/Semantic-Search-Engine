@@ -1,27 +1,48 @@
 # Changelog
 
-## Week 1
+All notable changes to this project.
 
-- Data Loader
-- Text Cleaning
-- Tokenization
-- BM25 Retrieval
+## 2.1.0 — Interface redesign
 
-## Week 2
+- New interface design: IBM Plex type, warm neutral palette, line icons, light and dark themes
+- Ask page shows the answer and its sources side by side, with numbered citations
+- Review queue laid out like a help-desk inbox (message list + reply panel)
+- Pages have their own URLs (`#queue`, `#users`, …) so refresh keeps your place
+- Project tidied for public release: development experiments moved to `scripts/experiments/`,
+  history moved to `docs/history/`, generated caches no longer tracked
 
-- Sentence Embeddings
-- FAISS Index
-- Dense Retrieval
+## 2.0.0 — Accounts, portals and analytics
 
-## Week 3
+- User accounts with two portals: **Admin console** and **Employee workspace**
+- First-run admin setup protected by `ADMIN_API_KEY`; hashed passwords, signed sessions,
+  lockout after repeated failures
+- Users page (create, disable, reset password, change role) and a full audit log
+- Analytics: email outcomes, questions, topics, confidence, review-queue health,
+  knowledge gaps and team activity
+- System page: component health and runtime settings (auto-replies, mark-as-read, schedule, re-index)
+- UI talks to the API through `/api` (Vite proxy in development, nginx in Docker)
 
-- Hybrid Search
-- Reciprocal Rank Fusion
+## 1.2.0 — Retrieval, intent and automation upgrades
 
-## Week 4
+- Sentence-aware chunking with section headings and real PDF page numbers
+- Persistent embedding cache; FAISS switched to cosine similarity
+- Education-specific query expansion; reranking on the user's original question
+- Few-shot embedding intent classifier combined with keyword rules (95.6% accuracy on the eval set)
+- Streaming answers with inline citations
+- Threaded email replies, Message-ID de-duplication, newsletter / no-reply filtering
+- API keys with viewer / agent / admin roles
+- pytest suite, GitHub Actions CI, Docker Compose stack
 
-- Search Engine
-- Logging
-- Profiling
-- JSON Configuration
-- Custom Exceptions
+## 1.1.0 — Email automation and web interface
+
+- Gmail inbox automation with scheduler, run history and human review queue
+- Confidence engine and intent detection deciding auto-reply vs. human review
+- React interface: ask questions, manage the knowledge base, automation dashboard
+- Security fixes for document paths and uploads
+
+## 1.0.0 — Search engine
+
+- BM25 and dense (FAISS + Sentence-Transformers) retrieval
+- Reciprocal Rank Fusion and cross-encoder reranking
+- Query preprocessing pipeline, logging, profiling, JSON configuration
+- Local LLM answers through Ollama (RAG)

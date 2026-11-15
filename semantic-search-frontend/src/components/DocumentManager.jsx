@@ -1,412 +1,272 @@
-import { useState, useEffect, useRef } from "react";
-import {
-    listDocuments,
-    uploadDocuments,
-    deleteDocument,
-    getDocumentContent
-} from "../services/api";
-import "../styles/document-manager.css";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { Eye, FileText, FolderUp, Search, Trash2, Upload } from "lucide-react";
+import { deleteDocument, getDocumentContent, listDocuments, uploadDocuments } from "../services/api";
+import { Modal, Notice } from "./ui";
+import "../styles/work.css";
 
-function DocumentManager() {
+const SUPPORTED = [".txt", ".pdf", ".docx", ".md"];
+
+function formatBytes(bytes) {
+    if (!bytes) return "0 B";
+    const units = ["B", "KB", "MB", "GB"];
+    const i = Math.min(units.length - 1, Math.floor(Math.log(bytes) / Math.log(1024)));
+    return `${(bytes / 1024 ** i).toFixed(i ? 1 : 0)} ${units[i]}`;
+}
+
+function formatDate(seconds) {
+    return new Date(seconds * 1000).toLocaleDateString(undefined, { year: "numeric", month: "short", day: "numeric" });
+}
+
+/** Knowledge base: everyone can browse; admins can upload and delete. */
+function DocumentManager({ readOnly = false }) {
     const [documents, setDocuments] = useState([]);
-    const [searchQuery, setSearchQuery] = useState("");
     const [loading, setLoading] = useState(true);
-    const [uploading, setUploading] = useState(false);
-    const [uploadStatus, setUploadStatus] = useState("");
-    const [stagedFiles, setStagedFiles] = useState([]);
-    const [isDragActive, setIsDragActive] = useState(false);
-    
-    // Viewer states
-    const [viewerOpen, setViewerOpen] = useState(false);
-    const [viewerDoc, setViewerDoc] = useState(null);
-    const [viewerContent, setViewerContent] = useState("");
-    const [viewerLoading, setViewerLoading] = useState(false);
+    const [filter, setFilter] = useState("");
+    const [staged, setStaged] = useState([]);
+    const [dragging, setDragging] = useState(false);
+    const [working, setWorking] = useState("");
+    const [flash, setFlash] = useState(null);
+    const [viewer, setViewer] = useState(null);
 
-    const fileInputRef = useRef(null);
-    const folderInputRef = useRef(null);
+    const fileInput = useRef(null);
+    const folderInput = useRef(null);
 
-    // Fetch documents on load
-    useEffect(() => {
-        fetchDocs();
-    }, []);
-
-    async function fetchDocs() {
-        setLoading(true);
+    const load = useCallback(async () => {
         try {
-            const data = await listDocuments();
-            setDocuments(data || []);
-        } catch (error) {
-            console.error("Failed to load documents:", error);
+            setDocuments(await listDocuments());
+        } catch (err) {
+            setFlash({ tone: "bad", text: err.message });
         } finally {
             setLoading(false);
         }
-    }
+    }, []);
 
-    // Format file sizes
-    function formatBytes(bytes) {
-        if (bytes === 0) return "0 Bytes";
-        const k = 1024;
-        const sizes = ["Bytes", "KB", "MB", "GB"];
-        const i = Math.floor(Math.log(bytes) / Math.log(k));
-        return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + " " + sizes[i];
-    }
+    useEffect(() => {
+        const initial = setTimeout(load, 0);
+        return () => clearTimeout(initial);
+    }, [load]);
 
-    // Format epoch timestamps
-    function formatDate(timestamp) {
-        const date = new Date(timestamp * 1000);
-        return date.toLocaleDateString(undefined, {
-            year: "numeric",
-            month: "short",
-            day: "numeric",
-            hour: "2-digit",
-            minute: "2-digit"
+    function stage(files) {
+        const supported = files.filter((file) => SUPPORTED.includes(`.${file.name.split(".").pop().toLowerCase()}`));
+        if (supported.length < files.length) {
+            setFlash({ tone: "warn", text: `Skipped ${files.length - supported.length} unsupported file(s). Supported: PDF, Word, Markdown, text.` });
+        }
+        setStaged((current) => {
+            const names = new Set(current.map((f) => f.webkitRelativePath || f.name));
+            return [...current, ...supported.filter((f) => !names.has(f.webkitRelativePath || f.name))];
         });
     }
 
-    // Handle Drag & Drop
-    function handleDrag(e) {
-        e.preventDefault();
-        e.stopPropagation();
-        if (e.type === "dragenter" || e.type === "dragover") {
-            setIsDragActive(true);
-        } else if (e.type === "dragleave") {
-            setIsDragActive(false);
-        }
+    function clearStaged() {
+        setStaged([]);
+        if (fileInput.current) fileInput.current.value = "";
+        if (folderInput.current) folderInput.current.value = "";
     }
 
-    function handleDrop(e) {
-        e.preventDefault();
-        e.stopPropagation();
-        setIsDragActive(false);
+    async function upload() {
+        if (!staged.length) return;
+        setWorking("Uploading and re-indexing…");
+        setFlash(null);
 
-        if (e.dataTransfer.files && e.dataTransfer.files.length > 0) {
-            stageFiles(Array.from(e.dataTransfer.files));
-        }
-    }
-
-    // Staging files
-    function stageFiles(files) {
-        // Filter out unsupported files
-        const supportedExtensions = [".txt", ".pdf", ".docx", ".md"];
-        const filtered = files.filter(file => {
-            const ext = "." + file.name.split(".").pop().toLowerCase();
-            return supportedExtensions.includes(ext);
+        const form = new FormData();
+        staged.forEach((file) => {
+            form.append("files", file);
+            form.append("paths", file.webkitRelativePath || file.name);
         });
 
-        if (filtered.length === 0) {
-            alert("No supported files selected. Supported types: .txt, .pdf, .docx, .md");
-            return;
-        }
+        const result = await uploadDocuments(form);
+        setWorking("");
 
-        setStagedFiles(prev => {
-            // Avoid duplicate filenames in staged files
-            const existingNames = new Set(prev.map(f => f.name));
-            const newFiles = filtered.filter(f => !existingNames.has(f.name));
-            return [...prev, ...newFiles];
-        });
-    }
-
-    // Handle standard inputs
-    function handleFileChange(e) {
-        if (e.target.files && e.target.files.length > 0) {
-            stageFiles(Array.from(e.target.files));
+        if (result.success) {
+            setFlash({ tone: "ok", text: `Added ${result.count} document${result.count === 1 ? "" : "s"}. The assistant can use them now.` });
+            clearStaged();
+            load();
+        } else {
+            setFlash({ tone: "bad", text: `Upload failed: ${result.error}` });
         }
     }
 
-    function handleFolderChange(e) {
-        if (e.target.files && e.target.files.length > 0) {
-            stageFiles(Array.from(e.target.files));
+    async function remove(doc) {
+        if (!window.confirm(`Delete ${doc.path}? The assistant will stop using it.`)) return;
+        setWorking(`Deleting ${doc.name}…`);
+        setFlash(null);
+        const result = await deleteDocument(doc.path);
+        setWorking("");
+        if (result.success) {
+            setFlash({ tone: "ok", text: `Deleted ${doc.name}.` });
+            load();
+        } else {
+            setFlash({ tone: "bad", text: `Couldn't delete: ${result.error}` });
         }
     }
 
-    // Clear Staging
-    function clearStaging() {
-        setStagedFiles([]);
-        if (fileInputRef.current) fileInputRef.current.value = "";
-        if (folderInputRef.current) folderInputRef.current.value = "";
-    }
-
-    // Upload files to backend
-    async function handleUpload() {
-        if (stagedFiles.length === 0) return;
-
-        setUploading(true);
-        setUploadStatus("Uploading files...");
-
-        const formData = new FormData();
-        stagedFiles.forEach(file => {
-            formData.append("files", file);
-            // Reconstruct webkitRelativePath for folder structure, fallback to name
-            const path = file.webkitRelativePath || file.name;
-            formData.append("paths", path);
-        });
-
+    async function view(doc) {
+        setViewer({ doc, content: null });
         try {
-            setUploadStatus("Indexing & building vector database...");
-            const res = await uploadDocuments(formData);
-            if (res.success) {
-                clearStaging();
-                await fetchDocs();
-            } else {
-                alert("Upload failed: " + res.error);
-            }
-        } catch (error) {
-            console.error("Upload error:", error);
-            alert("Upload failed. Make sure the backend server is running.");
-        } finally {
-            setUploading(false);
-            setUploadStatus("");
+            const result = await getDocumentContent(doc.path);
+            setViewer({ doc, content: result.content || "(empty document)" });
+        } catch (err) {
+            setViewer({ doc, content: `Couldn't load this document: ${err.message}` });
         }
     }
 
-    // Delete document
-    async function handleDelete(path) {
-        if (!confirm(`Are you sure you want to delete ${path}? This will remove it from the index.`)) {
-            return;
-        }
-
-        setUploading(true);
-        setUploadStatus(`Deleting ${path} & re-indexing...`);
-
-        try {
-            const res = await deleteDocument(path);
-            if (res.success) {
-                await fetchDocs();
-            } else {
-                alert("Deletion failed: " + res.error);
-            }
-        } catch (error) {
-            console.error("Deletion error:", error);
-            alert("Deletion failed. Make sure the backend server is running.");
-        } finally {
-            setUploading(false);
-            setUploadStatus("");
-        }
-    }
-
-    // Open Document in Viewer Modal
-    async function handleView(doc) {
-        setViewerDoc(doc);
-        setViewerOpen(true);
-        setViewerLoading(true);
-        setViewerContent("");
-
-        try {
-            const res = await getDocumentContent(doc.path);
-            if (res.success) {
-                setViewerContent(res.content);
-            } else {
-                setViewerContent("Error loading content: " + res.error);
-            }
-        } catch (error) {
-            console.error("Fetch content error:", error);
-            setViewerContent("Failed to load document content. Make sure backend is running.");
-        } finally {
-            setViewerLoading(false);
-        }
-    }
-
-    // Filter documents based on local search
-    const filteredDocs = documents.filter(doc =>
-        doc.path.toLowerCase().includes(searchQuery.toLowerCase())
+    const visible = useMemo(
+        () => documents
+            .filter((doc) => doc.path.toLowerCase().includes(filter.toLowerCase()))
+            .sort((a, b) => a.path.localeCompare(b.path)),
+        [documents, filter]
     );
 
+    const totalSize = documents.reduce((sum, doc) => sum + doc.size, 0);
+
     return (
-        <section className="doc-manager-section">
-            <div className="doc-manager-header">
-                <h2>Knowledge Base Manager</h2>
-                <p>Manage documents inside <code>data/documents</code>. Uploaded documents are parsed, chunked, embedded, and re-indexed automatically.</p>
+        <div className="page">
+            <div className="page-head">
+                <div>
+                    <h1>Knowledge base</h1>
+                    <p>
+                        {readOnly
+                            ? "The documents the assistant answers from. Ask an admin to add or remove documents."
+                            : "The documents the assistant answers from. Changes are indexed straight away."}
+                    </p>
+                </div>
+                <div className="row small muted">
+                    <span className="num">{documents.length} documents</span>
+                    <span className="faint">·</span>
+                    <span className="num">{formatBytes(totalSize)}</span>
+                </div>
             </div>
 
-            {uploading && (
-                <div className="status-overlay">
-                    <div className="status-spinner"></div>
-                    <h3>Processing Knowledge Base</h3>
-                    <p>{uploadStatus}</p>
-                </div>
-            )}
+            {flash && <Notice tone={flash.tone} onClose={() => setFlash(null)}>{flash.text}</Notice>}
 
-            <div className="doc-manager-grid">
-                {/* Upload Panel */}
-                <div className="upload-panel card">
-                    <h3>Add New Documents</h3>
-                    <p className="subtitle">Supported: .txt, .pdf, .docx, .md</p>
-
-                    <div 
-                        className={`dropzone ${isDragActive ? "active" : ""}`}
-                        onDragEnter={handleDrag}
-                        onDragOver={handleDrag}
-                        onDragLeave={handleDrag}
-                        onDrop={handleDrop}
-                        onClick={() => fileInputRef.current && fileInputRef.current.click()}
-                    >
-                        <div className="dropzone-icon">📥</div>
-                        <p>Drag & drop files here, or <span>browse files</span></p>
-                    </div>
-
-                    <div className="input-group">
-                        <button 
-                            className="btn btn-secondary" 
-                            onClick={() => fileInputRef.current && fileInputRef.current.click()}
-                            disabled={uploading}
+            {!readOnly && (
+                <div className="card">
+                    <div className="card-body stack">
+                        <div
+                            className={`dropzone ${dragging ? "active" : ""}`}
+                            onDragOver={(e) => { e.preventDefault(); setDragging(true); }}
+                            onDragLeave={() => setDragging(false)}
+                            onDrop={(e) => {
+                                e.preventDefault();
+                                setDragging(false);
+                                if (e.dataTransfer.files?.length) stage(Array.from(e.dataTransfer.files));
+                            }}
+                            onClick={() => fileInput.current?.click()}
+                            role="button"
+                            tabIndex={0}
+                            onKeyDown={(e) => (e.key === "Enter" || e.key === " ") && fileInput.current?.click()}
                         >
-                            📄 Select Files
-                        </button>
-                        <button 
-                            className="btn btn-secondary" 
-                            onClick={() => folderInputRef.current && folderInputRef.current.click()}
-                            disabled={uploading}
-                        >
-                            📁 Select Folder
-                        </button>
-                    </div>
-
-                    {/* Hidden Inputs */}
-                    <input 
-                        type="file" 
-                        ref={fileInputRef} 
-                        multiple 
-                        style={{ display: "none" }} 
-                        onChange={handleFileChange} 
-                    />
-                    <input 
-                        type="file" 
-                        ref={folderInputRef} 
-                        webkitdirectory="" 
-                        directory="" 
-                        multiple 
-                        style={{ display: "none" }} 
-                        onChange={handleFolderChange} 
-                    />
-
-                    {/* Staged Files List */}
-                    {stagedFiles.length > 0 && (
-                        <div className="staged-container">
-                            <h4>Selected Files ({stagedFiles.length})</h4>
-                            <div className="staged-list">
-                                {stagedFiles.map((file, idx) => (
-                                    <div key={idx} className="staged-item">
-                                        <span className="file-icon">📄</span>
-                                        <span className="file-name" title={file.webkitRelativePath || file.name}>
-                                            {file.webkitRelativePath || file.name}
-                                        </span>
-                                        <span className="file-size">{formatBytes(file.size)}</span>
-                                    </div>
-                                ))}
-                            </div>
-                            <div className="action-buttons">
-                                <button className="btn btn-danger" onClick={clearStaging} disabled={uploading}>
-                                    Cancel
-                                </button>
-                                <button className="btn btn-primary" onClick={handleUpload} disabled={uploading}>
-                                    Upload & Index
-                                </button>
-                            </div>
+                            <Upload size={20} />
+                            <div><strong style={{ color: "var(--text)", fontWeight: 500 }}>Drop files here</strong> or click to browse</div>
+                            <div className="small faint">PDF, Word, Markdown or plain text</div>
                         </div>
-                    )}
-                </div>
 
-                {/* Documents List */}
-                <div className="docs-list-panel card">
-                    <div className="docs-list-header">
-                        <h3>Indexed Documents</h3>
-                        <span className="doc-count">{documents.length} Files</span>
-                    </div>
+                        <input ref={fileInput} type="file" multiple hidden accept={SUPPORTED.join(",")}
+                            onChange={(e) => e.target.files?.length && stage(Array.from(e.target.files))} />
+                        <input ref={folderInput} type="file" multiple hidden webkitdirectory="" directory=""
+                            onChange={(e) => e.target.files?.length && stage(Array.from(e.target.files))} />
 
-                    <div className="search-bar-wrapper">
-                        <span className="search-icon">🔍</span>
-                        <input 
-                            type="text" 
-                            placeholder="Filter files by name or path..." 
-                            value={searchQuery}
-                            onChange={(e) => setSearchQuery(e.target.value)}
-                            disabled={loading}
-                        />
-                    </div>
-
-                    <div className="docs-grid-container">
-                        {loading ? (
-                            <div className="list-loading">
-                                <div className="spinner"></div>
-                                <p>Loading documents...</p>
-                            </div>
-                        ) : filteredDocs.length === 0 ? (
-                            <div className="empty-docs">
-                                <h3>📂 No Documents Found</h3>
-                                <p>{searchQuery ? "No matches for search query." : "No documents indexed. Upload files to get started."}</p>
-                            </div>
-                        ) : (
-                            <div className="docs-grid">
-                                {filteredDocs.map((doc, idx) => (
-                                    <div key={idx} className="doc-item-card">
-                                        <div className="doc-item-top">
-                                            <div className="doc-item-icon">📄</div>
-                                            <div className="doc-item-info">
-                                                <h4 className="doc-item-name" title={doc.name}>
-                                                    {doc.name}
-                                                </h4>
-                                                <p className="doc-item-path" title={doc.path}>
-                                                    {doc.path}
-                                                </p>
-                                            </div>
-                                        </div>
-                                        
-                                        <div className="doc-item-meta">
-                                            <span>⚖️ {formatBytes(doc.size)}</span>
-                                            <span>📅 {formatDate(doc.modified)}</span>
-                                        </div>
-                                        
-                                        <div className="doc-item-actions">
-                                            <button 
-                                                className="btn-action view" 
-                                                title="View parsed text"
-                                                onClick={() => handleView(doc)}
-                                            >
-                                                👁️ View
-                                            </button>
-                                            <button 
-                                                className="btn-action delete" 
-                                                title="Remove from index"
-                                                onClick={() => handleDelete(doc.path)}
-                                            >
-                                                🗑️ Delete
-                                            </button>
-                                        </div>
-                                    </div>
-                                ))}
-                            </div>
+                        {staged.length > 0 && (
+                            <>
+                                <ul className="staged">
+                                    {staged.map((file) => (
+                                        <li key={file.webkitRelativePath || file.name}>
+                                            <span>{file.webkitRelativePath || file.name}</span>
+                                            <span className="faint num">{formatBytes(file.size)}</span>
+                                        </li>
+                                    ))}
+                                </ul>
+                            </>
                         )}
-                    </div>
-                </div>
-            </div>
 
-            {/* Document Viewer Modal */}
-            {viewerOpen && (
-                <div className="viewer-modal">
-                    <div className="viewer-content card">
-                        <div className="viewer-header">
-                            <div>
-                                <h3>{viewerDoc?.name}</h3>
-                                <p className="subtitle">{viewerDoc?.path}</p>
-                            </div>
-                            <button className="close-btn" onClick={() => setViewerOpen(false)}>×</button>
-                        </div>
-                        <div className="viewer-body">
-                            {viewerLoading ? (
-                                <div className="viewer-loader">
-                                    <div className="spinner"></div>
-                                    <p>Extracting & loading parsed text...</p>
+                        {working && <div className="busy-bar" aria-label={working} />}
+
+                        <div className="row" style={{ justifyContent: "space-between" }}>
+                            <button className="btn btn-ghost btn-sm" onClick={() => folderInput.current?.click()} disabled={Boolean(working)}>
+                                <FolderUp size={15} /> Upload a folder
+                            </button>
+                            {staged.length > 0 && (
+                                <div className="row">
+                                    <button className="btn" onClick={clearStaged} disabled={Boolean(working)}>Cancel</button>
+                                    <button className="btn btn-primary" onClick={upload} disabled={Boolean(working)}>
+                                        {working ? "Working…" : `Add ${staged.length} file${staged.length === 1 ? "" : "s"}`}
+                                    </button>
                                 </div>
-                            ) : (
-                                <pre className="parsed-text">
-                                    {viewerContent || "This document is empty."}
-                                </pre>
                             )}
                         </div>
                     </div>
                 </div>
             )}
-        </section>
+
+            <div className="card">
+                <div className="queue-search" style={{ borderBottom: "1px solid var(--line)" }}>
+                    <Search size={15} className="faint" />
+                    <input className="queue-search-input" placeholder="Filter by name or folder" value={filter}
+                        onChange={(e) => setFilter(e.target.value)} aria-label="Filter documents" />
+                </div>
+
+                {loading ? (
+                    <p className="empty">Loading…</p>
+                ) : visible.length === 0 ? (
+                    <p className="empty">{filter ? "No documents match." : "No documents yet."}</p>
+                ) : (
+                    <div className="table-wrap">
+                        <table className="table">
+                            <thead>
+                                <tr>
+                                    <th>Name</th>
+                                    <th>Folder</th>
+                                    <th className="right">Size</th>
+                                    <th>Updated</th>
+                                    <th className="right"><span className="sr-only">Actions</span></th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {visible.map((doc) => {
+                                    const folder = doc.path.includes("/") ? doc.path.slice(0, doc.path.lastIndexOf("/")) : "—";
+                                    return (
+                                        <tr key={doc.path}>
+                                            <td>
+                                                <span className="doc-name"><FileText size={15} />{doc.name}</span>
+                                            </td>
+                                            <td className="folder-tag">{folder.replace(/_/g, " ")}</td>
+                                            <td className="right muted">{formatBytes(doc.size)}</td>
+                                            <td className="muted">{formatDate(doc.modified)}</td>
+                                            <td className="right">
+                                                <div className="row" style={{ justifyContent: "flex-end", flexWrap: "nowrap", gap: 2 }}>
+                                                    <button className="icon-button" onClick={() => view(doc)} aria-label={`View ${doc.name}`} title="View text">
+                                                        <Eye size={15} />
+                                                    </button>
+                                                    {!readOnly && (
+                                                        <button className="icon-button" onClick={() => remove(doc)} disabled={Boolean(working)}
+                                                            aria-label={`Delete ${doc.name}`} title="Delete">
+                                                            <Trash2 size={15} />
+                                                        </button>
+                                                    )}
+                                                </div>
+                                            </td>
+                                        </tr>
+                                    );
+                                })}
+                            </tbody>
+                        </table>
+                    </div>
+                )}
+            </div>
+
+            {viewer && (
+                <Modal wide title={viewer.doc.name} onClose={() => setViewer(null)}>
+                    <div className="modal-body">
+                        <div className="small faint">{viewer.doc.path}</div>
+                        {viewer.content === null ? (
+                            <div className="busy-bar" />
+                        ) : (
+                            <div className="doc-viewer">{viewer.content}</div>
+                        )}
+                    </div>
+                </Modal>
+            )}
+        </div>
     );
 }
 

@@ -39,7 +39,9 @@ def test_auth_disabled_without_keys(api, monkeypatch):
 
     info = api.get("/auth/me").json()
 
-    assert info == {"success": True, "role": "admin", "auth_enabled": False}
+    assert info["role"] == "admin"
+    assert info["auth_enabled"] is False
+    assert info["method"] == "disabled"
 
 
 # ============================================================
@@ -204,7 +206,10 @@ def test_reply_sends_threaded_email_and_resolves(api, monkeypatch):
 
 def test_automation_run_without_email_account(api):
 
-    response = api.post("/automation/run", headers=AGENT).json()
+    # Inbox checks are an admin control.
+    assert api.post("/automation/run", headers=AGENT).status_code == 403
+
+    response = api.post("/automation/run", headers=ADMIN).json()
 
     assert response["success"] is True
     assert response["summary"]["fetched"] == 0

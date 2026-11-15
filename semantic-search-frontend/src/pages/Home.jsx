@@ -1,270 +1,249 @@
-import { useState, useEffect } from "react";
+import { useEffect, useRef, useState } from "react";
+import { ArrowUp, LoaderCircle } from "lucide-react";
 
-import SearchBox from "../components/SearchBox";
-import LoadingSpinner from "../components/LoadingSpinner";
 import AnswerCard from "../components/AnswerCard";
 import SourceCard from "../components/SourceCard";
-import StatisticsCard from "../components/StatisticsCard";
-import HeroSection from "../components/HeroSection";
-import Footer from "../components/Footer";
-import DocumentManager from "../components/DocumentManager";
-import AutomationDashboard from "../components/AutomationDashboard";
-
+import { Modal, Notice } from "../components/ui";
+import { timeAgo } from "../utils/format";
 import { searchDocumentsStream } from "../services/api";
+import "../styles/ask.css";
 
-import "../styles/home.css";
+const SUGGESTIONS = [
+    "How many days do I have to ask for a refund?",
+    "The password reset email never arrived",
+    "Can I get my certificate reissued?",
+    "What will I build in the Python Basics course?"
+];
+
+function QuestionBox({ value, onChange, onSubmit, busy, compact = false }) {
+    const ref = useRef(null);
+
+    useEffect(() => {
+        if (!compact) ref.current?.focus();
+    }, [compact]);
+
+    return (
+        <form
+            className={`ask-box ${compact ? "compact" : ""}`}
+            onSubmit={(e) => { e.preventDefault(); onSubmit(); }}
+        >
+            <label htmlFor="question" className="sr-only">Question</label>
+            <input
+                id="question"
+                ref={ref}
+                value={value}
+                onChange={(e) => onChange(e.target.value)}
+                placeholder="Ask about policies, payments, courses, access…"
+                autoComplete="off"
+                disabled={busy}
+            />
+            <button type="submit" className="ask-submit" disabled={busy || !value.trim()} aria-label="Ask">
+                {busy ? <LoaderCircle size={16} className="spin" /> : <ArrowUp size={16} strokeWidth={2.2} />}
+            </button>
+        </form>
+    );
+}
 
 function Home({
-    activeTab,
     newSearchTrigger,
     selectedHistoryItem,
+    history = [],
     onSaveToHistory,
-    onStartNewSearch,
-    authVersion = 0
+    onSelectHistory,
+    onClearHistory,
+    onStartNewSearch
 }) {
-
     const [query, setQuery] = useState("");
-
-    // loading: waiting for the first answer token.
-    // streaming: answer text is arriving.
+    const [asked, setAsked] = useState("");
     const [loading, setLoading] = useState(false);
     const [streaming, setStreaming] = useState(false);
-
     const [answer, setAnswer] = useState("");
-
     const [sources, setSources] = useState([]);
-    const [activeSource, setActiveSource] = useState(null);
     const [meta, setMeta] = useState(null);
-
+    const [error, setError] = useState("");
+    const [activeSource, setActiveSource] = useState(null);
     const [loadedHistoryId, setLoadedHistoryId] = useState(null);
 
+    function reset() {
+        setQuery("");
+        setAsked("");
+        setAnswer("");
+        setSources([]);
+        setMeta(null);
+        setError("");
+        setActiveSource(null);
+    }
 
-    // Clear state on new search trigger from sidebar
     useEffect(() => {
         if (newSearchTrigger > 0) {
-            handleClear();
+            const id = setTimeout(reset, 0);
+            return () => clearTimeout(id);
         }
+        return undefined;
     }, [newSearchTrigger]);
 
-    // Load the selected history item into the workspace (state is
-    // adjusted during render when the selection changes).
+    // Show a past question when it is picked from the list.
     if (selectedHistoryItem && selectedHistoryItem.id !== loadedHistoryId) {
         setLoadedHistoryId(selectedHistoryItem.id);
-        setQuery(selectedHistoryItem.query || "");
-        setAnswer(selectedHistoryItem.answer || "");
+        setQuery(selectedHistoryItem.query);
+        setAsked(selectedHistoryItem.query);
+        setAnswer(selectedHistoryItem.answer);
         setSources(selectedHistoryItem.sources || []);
         setMeta(selectedHistoryItem.meta || null);
-        setActiveSource(null);
+        setError("");
     } else if (!selectedHistoryItem && loadedHistoryId !== null) {
         setLoadedHistoryId(null);
     }
 
     const busy = loading || streaming;
+    const hasResult = Boolean(asked);
 
+    async function ask(text = query) {
+        const question = text.trim();
+        if (!question || busy) return;
 
-    async function handleSearch(forcedQuery) {
-        const searchQuery = typeof forcedQuery === "string" ? forcedQuery : query;
-        if (!searchQuery.trim() || busy) {
-            return;
-        }
-
+        setQuery(question);
+        setAsked(question);
         setLoading(true);
         setStreaming(false);
         setAnswer("");
         setSources([]);
         setMeta(null);
-        setActiveSource(null);
+        setError("");
+        onStartNewSearch && onStartNewSearch();
 
-        if (onStartNewSearch) {
-            onStartNewSearch();
-        }
-
-        let streamedText = "";
+        let streamed = "";
 
         try {
-
-            const result = await searchDocumentsStream(searchQuery, (event) => {
-
+            const result = await searchDocumentsStream(question, (event) => {
                 if (event.type === "sources") {
                     setSources(event.sources || []);
                     setMeta({ intent: event.intent || null, confidence: null, routing: null });
                 }
-
                 if (event.type === "token") {
-                    streamedText += event.text;
+                    streamed += event.text;
                     setLoading(false);
                     setStreaming(true);
-                    setAnswer(streamedText);
+                    setAnswer(streamed);
                 }
             });
 
-            const receivedAnswer = result.answer || streamedText;
-            const receivedSources = result.sources || [];
-
-            const receivedMeta = {
+            const finalMeta = {
                 intent: result.intent || null,
                 confidence: result.confidence || null,
                 routing: result.routing || null
             };
 
-            setAnswer(receivedAnswer);
-            setSources(receivedSources);
-            setMeta(receivedMeta);
+            setAnswer(result.answer || streamed);
+            setSources(result.sources || []);
+            setMeta(finalMeta);
 
-            if (receivedAnswer && onSaveToHistory) {
-                onSaveToHistory({
-                    query: searchQuery,
-                    answer: receivedAnswer,
-                    sources: receivedSources,
-                    meta: receivedMeta
-                });
-            }
-
-        } catch (error) {
-
-            console.error(error);
-
-            alert(
-                `Search failed: ${error.message}. Please make sure the backend is running.`
-            );
-
+            onSaveToHistory && onSaveToHistory({
+                query: question,
+                answer: result.answer || streamed,
+                sources: result.sources || [],
+                meta: finalMeta
+            });
+        } catch (err) {
+            setError(err.message);
         } finally {
-
             setLoading(false);
             setStreaming(false);
-
         }
     }
 
-    function handleCitation(number) {
+    function openCitation(number) {
         const source = sources[number - 1];
-        if (source) {
-            setActiveSource({ ...source, citation: number });
-        }
+        if (source) setActiveSource({ ...source, number });
     }
 
+    if (!hasResult) {
+        return (
+            <div className="page ask-start">
+                <div className="ask-intro">
+                    <h1>Ask the knowledge base</h1>
+                    <p>Answers are written only from your documents, with the sources they came from.</p>
+                </div>
 
-    function handleClear() {
+                <QuestionBox value={query} onChange={setQuery} onSubmit={() => ask()} busy={busy} />
 
-        setQuery("");
+                <div className="ask-lists">
+                    <section>
+                        <h2>Try asking</h2>
+                        <ul className="ask-list">
+                            {SUGGESTIONS.map((text) => (
+                                <li key={text}>
+                                    <button onClick={() => ask(text)}>{text}</button>
+                                </li>
+                            ))}
+                        </ul>
+                    </section>
 
-        setAnswer("");
-
-        setSources([]);
-        setActiveSource(null);
-        setMeta(null);
-
+                    {history.length > 0 && (
+                        <section>
+                            <div className="ask-list-head">
+                                <h2>Recent</h2>
+                                <button className="btn btn-ghost btn-sm" onClick={onClearHistory}>Clear</button>
+                            </div>
+                            <ul className="ask-list">
+                                {history.slice(0, 6).map((item) => (
+                                    <li key={item.id}>
+                                        <button onClick={() => onSelectHistory(item)}>
+                                            <span>{item.query}</span>
+                                            <span className="faint small">{timeAgo(item.timestamp)}</span>
+                                        </button>
+                                    </li>
+                                ))}
+                            </ul>
+                        </section>
+                    )}
+                </div>
+            </div>
+        );
     }
-
 
     return (
+        <div className="page">
+            <QuestionBox value={query} onChange={setQuery} onSubmit={() => ask()} busy={busy} compact />
 
-        <div className="home-container">
+            {error && <Notice tone="bad">{error}</Notice>}
 
-            {activeTab === "search" ? (
-                <div className="search-workspace">
-                    {(answer || busy) && (
-                        <SearchBox
-                            query={query}
-                            setQuery={setQuery}
-                            handleSearch={handleSearch}
-                            loading={busy}
-                            hasResults={
-                                Boolean(answer)
-                            }
-                            onClear={handleClear}
-                        />
-                    )}
+            <div className="ask-result">
+                <AnswerCard
+                    question={asked}
+                    answer={answer}
+                    loading={loading}
+                    streaming={streaming}
+                    meta={meta}
+                    sourceCount={sources.length}
+                    onCitationClick={openCitation}
+                />
+                <SourceCard sources={sources} loading={loading} onSelectSource={(source, index) => setActiveSource({ ...source, number: index + 1 })} />
+            </div>
 
-
-                    {!answer && !busy && (
-
-                        <HeroSection 
-                            onSelectQuery={(q) => {
-                                setQuery(q);
-                                handleSearch(q);
-                            }}
-                            searchBox={
-                                <SearchBox
-                                    query={query}
-                                    setQuery={setQuery}
-                                    handleSearch={handleSearch}
-                                    loading={loading}
-                                    hasResults={
-                                        Boolean(answer)
-                                    }
-                                    onClear={handleClear}
-                                />
-                            }
-                        />
-
-                    )}
-
-
-                    <LoadingSpinner
-                        loading={loading}
-                    />
-
-
-                    <AnswerCard
-                        answer={answer}
-                        loading={loading}
-                        streaming={streaming}
-                        meta={meta}
-                        sourceCount={sources.length}
-                        onCitationClick={handleCitation}
-                    />
-
-
-                    <SourceCard
-                        sources={sources}
-                        onSelectSource={setActiveSource}
-                    />
-
-
-                    <StatisticsCard
-                        model="all-MiniLM-L6-v2"
-                        reranker="ms-marco-MiniLM-L-6-v2"
-                        llm="Gemma 4"
-                        totalSources={
-                            sources.length
-                        }
-                    />
-                </div>
-            ) : activeTab === "automation" ? (
-                <AutomationDashboard key={`automation-${authVersion}`} />
-            ) : (
-                <DocumentManager key={`documents-${authVersion}`} />
-            )}
-
-
-            <Footer />
-
-            {/* Source Details Modal - Rendered at root level to prevent sibling stacking context issues */}
             {activeSource && (
-                <div className="source-modal-overlay" onClick={() => setActiveSource(null)}>
-                    <div className="source-modal-content card" onClick={(e) => e.stopPropagation()}>
-                        <div className="source-modal-header">
-                            <div>
-                                <h3>
-                                    {activeSource.citation ? `[${activeSource.citation}] ` : ""}
-                                    {activeSource.source}
-                                </h3>
-                                <p className="subtitle">Page {activeSource.page ?? 1} • Chunk {activeSource.chunk ?? "-"}</p>
-                            </div>
-                            <button className="source-modal-close" onClick={() => setActiveSource(null)}>×</button>
+                <Modal
+                    wide
+                    title={`[${activeSource.number}] ${activeSource.source}`}
+                    onClose={() => setActiveSource(null)}
+                >
+                    <div className="modal-body">
+                        <div className="row small faint">
+                            <span>Page {activeSource.page ?? 1}</span>
+                            <span>·</span>
+                            <span>Section {activeSource.chunk ?? "—"}</span>
+                            {typeof activeSource.cross_score === "number" && (
+                                <>
+                                    <span>·</span>
+                                    <span className="mono">relevance {activeSource.cross_score.toFixed(2)}</span>
+                                </>
+                            )}
                         </div>
-                        <div className="source-modal-body">
-                            <p className="source-modal-text">
-                                {activeSource.text}
-                            </p>
-                        </div>
+                        <p className="source-full">{activeSource.text}</p>
                     </div>
-                </div>
+                </Modal>
             )}
-
         </div>
-
     );
 }
 

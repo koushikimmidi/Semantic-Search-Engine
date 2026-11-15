@@ -1,0 +1,355 @@
+/* ---------------- Ask: start ---------------- */
+
+.ask-start {
+    max-width: 720px;
+    padding-top: 9vh;
+    gap: 20px;
+}
+
+.ask-intro h1 {
+    font-size: 24px;
+    font-weight: 600;
+    letter-spacing: -0.02em;
+}
+
+.ask-intro p {
+    margin-top: 4px;
+    color: var(--text-2);
+    font-size: 14.5px;
+}
+
+.ask-box {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 6px 6px 6px 16px;
+    background: var(--surface);
+    border: 1px solid var(--line-strong);
+    border-radius: var(--radius-lg);
+    transition: border-color 0.12s ease, box-shadow 0.12s ease;
+}
+
+.ask-box:focus-within {
+    border-color: var(--accent);
+    box-shadow: 0 0 0 3px var(--focus);
+}
+
+.ask-box input {
+    flex: 1;
+    min-width: 0;
+    height: 40px;
+    border: none;
+    background: transparent;
+    font-size: 15px;
+    outline: none;
+}
+
+.ask-box input::placeholder {
+    color: var(--text-3);
+}
+
+.ask-box.compact input {
+    height: 32px;
+    font-size: 14.5px;
+}
+
+.ask-submit {
+    width: 34px;
+    height: 34px;
+    border-radius: var(--radius);
+    background: var(--ink);
+    color: var(--on-ink);
+    display: grid;
+    place-items: center;
+    flex-shrink: 0;
+}
+
+.ask-box.compact .ask-submit {
+    width: 30px;
+    height: 30px;
+}
+
+.ask-submit:disabled {
+    background: var(--surface-3);
+    color: var(--text-3);
+    cursor: not-allowed;
+}
+
+.ask-lists {
+    display: grid;
+    gap: 24px;
+    margin-top: 8px;
+}
+
+.ask-lists h2 {
+    font-size: 12.5px;
+    font-weight: 500;
+    color: var(--text-3);
+    margin-bottom: 6px;
+}
+
+.ask-list-head {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 2px;
+}
+
+.ask-list-head h2 {
+    margin-bottom: 0;
+}
+
+.ask-list {
+    list-style: none;
+    border-top: 1px solid var(--line);
+}
+
+.ask-list li {
+    border-bottom: 1px solid var(--line);
+}
+
+.ask-list button {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 16px;
+    width: 100%;
+    padding: 10px 2px;
+    text-align: left;
+    font-size: 14px;
+    color: var(--text);
+}
+
+.ask-list button:hover {
+    color: var(--accent);
+}
+
+.ask-list button span:first-child {
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+/* ---------------- Ask: result ---------------- */
+
+.ask-result {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) 320px;
+    gap: 16px;
+    align-items: start;
+}
+
+.answer {
+    display: flex;
+    flex-direction: column;
+}
+
+.answer-question {
+    padding: 16px 20px 0;
+    font-size: 13px;
+    color: var(--text-3);
+}
+
+.answer-text {
+    padding: 8px 20px 18px;
+}
+
+.answer-text p {
+    font-size: 15.5px;
+    line-height: 1.7;
+    color: var(--text);
+    white-space: pre-wrap;
+}
+
+.answer-foot {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    flex-wrap: wrap;
+    padding: 10px 16px 10px 20px;
+    border-top: 1px solid var(--line);
+}
+
+.cite {
+    display: inline-grid;
+    place-items: center;
+    min-width: 17px;
+    height: 17px;
+    padding: 0 4px;
+    margin: 0 1px 0 2px;
+    border-radius: 4px;
+    background: var(--surface-2);
+    border: 1px solid var(--line);
+    color: var(--text-2);
+    font-size: 11px;
+    font-weight: 600;
+    line-height: 1;
+    vertical-align: 2px;
+    font-variant-numeric: tabular-nums;
+}
+
+.cite:hover:not(:disabled) {
+    background: var(--accent-soft);
+    border-color: var(--accent);
+    color: var(--accent);
+}
+
+.cite:disabled {
+    opacity: 0.5;
+    cursor: default;
+}
+
+.caret {
+    display: inline-block;
+    width: 2px;
+    height: 1.05em;
+    margin-left: 2px;
+    vertical-align: -3px;
+    background: var(--text);
+    animation: caret-blink 1s steps(2, start) infinite;
+}
+
+@keyframes caret-blink {
+    to { visibility: hidden; }
+}
+
+.skeleton {
+    display: flex;
+    flex-direction: column;
+    gap: 9px;
+    padding: 6px 0;
+}
+
+.skeleton span {
+    display: block;
+    height: 11px;
+    width: 100%;
+    border-radius: 4px;
+    background: linear-gradient(90deg, var(--surface-2) 25%, var(--surface-3) 50%, var(--surface-2) 75%);
+    background-size: 200% 100%;
+    animation: shimmer 1.4s ease-in-out infinite;
+}
+
+@keyframes shimmer {
+    from { background-position: 200% 0; }
+    to { background-position: -200% 0; }
+}
+
+.spin {
+    animation: spin 0.9s linear infinite;
+}
+
+@keyframes spin {
+    to { transform: rotate(360deg); }
+}
+
+/* Sources */
+
+.sources {
+    position: sticky;
+    top: 72px;
+}
+
+.sources-head {
+    display: flex;
+    align-items: baseline;
+    gap: 8px;
+    margin-bottom: 8px;
+}
+
+.sources-head h2 {
+    font-size: 13px;
+    font-weight: 600;
+}
+
+.source-list {
+    list-style: none;
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+}
+
+.source-list button {
+    display: flex;
+    gap: 10px;
+    width: 100%;
+    padding: 10px 12px;
+    text-align: left;
+    background: var(--surface);
+    border: 1px solid var(--line);
+    border-radius: var(--radius);
+    transition: border-color 0.12s ease;
+}
+
+.source-list button:hover {
+    border-color: var(--line-strong);
+}
+
+.source-num {
+    flex-shrink: 0;
+    width: 18px;
+    height: 18px;
+    border-radius: 4px;
+    background: var(--surface-2);
+    border: 1px solid var(--line);
+    font-size: 11px;
+    font-weight: 600;
+    color: var(--text-2);
+    display: grid;
+    place-items: center;
+    margin-top: 1px;
+}
+
+.source-body {
+    min-width: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 3px;
+}
+
+.source-name {
+    display: flex;
+    align-items: center;
+    gap: 5px;
+    font-size: 13px;
+    font-weight: 500;
+    color: var(--text);
+    min-width: 0;
+}
+
+.source-name svg {
+    color: var(--text-3);
+    flex-shrink: 0;
+}
+
+.source-snippet {
+    font-size: 12.5px;
+    color: var(--text-2);
+    line-height: 1.5;
+    display: -webkit-box;
+    -webkit-line-clamp: 3;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+}
+
+.source-full {
+    font-size: 14.5px;
+    line-height: 1.7;
+    white-space: pre-wrap;
+}
+
+@media (max-width: 900px) {
+    .ask-result {
+        grid-template-columns: minmax(0, 1fr);
+    }
+
+    .sources {
+        position: static;
+    }
+
+    .ask-start {
+        padding-top: 4vh;
+    }
+}

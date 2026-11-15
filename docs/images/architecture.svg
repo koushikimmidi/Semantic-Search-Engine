@@ -1,0 +1,123 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 560" width="1200" height="560" font-family="-apple-system, 'Segoe UI', Helvetica, Arial, sans-serif">
+  <defs>
+    <marker id="arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+      <path d="M0,0 L10,5 L0,10 z" fill="#6b6963"/>
+    </marker>
+    <style>
+      .box { fill: #ffffff; stroke: #d3d0c8; stroke-width: 1.2; }
+      .accent { fill: #eef3fd; stroke: #2a78d6; stroke-width: 1.2; }
+      .warm { fill: #fdf1ea; stroke: #eb6834; stroke-width: 1.2; }
+      .ok { fill: #e8f6ef; stroke: #1baf7a; stroke-width: 1.2; }
+      .ink { fill: #1f1e1c; }
+      .title { font-size: 15px; font-weight: 600; fill: #1c1b19; }
+      .sub { font-size: 12.5px; fill: #5f5d57; }
+      .label { font-size: 12px; font-weight: 600; fill: #8f8c84; letter-spacing: 0.06em; }
+      .flow { stroke: #6b6963; stroke-width: 1.5; fill: none; marker-end: url(#arrow); }
+      .dash { stroke: #a9a79f; stroke-width: 1.3; fill: none; stroke-dasharray: 5 5; marker-end: url(#arrow); }
+    </style>
+  </defs>
+
+  <rect width="1200" height="560" rx="16" fill="#f6f5f2"/>
+
+  <!-- Column labels -->
+  <text x="40" y="44" class="label">INPUT</text>
+  <text x="250" y="44" class="label">UNDERSTAND &amp; RETRIEVE</text>
+  <text x="720" y="44" class="label">ANSWER &amp; DECIDE</text>
+  <text x="1010" y="44" class="label">OUTCOME</text>
+
+  <!-- Inputs -->
+  <rect x="40" y="70" width="170" height="74" rx="10" class="box"/>
+  <text x="58" y="100" class="title">Support inbox</text>
+  <text x="58" y="122" class="sub">Gmail (IMAP), scheduled</text>
+
+  <rect x="40" y="166" width="170" height="74" rx="10" class="box"/>
+  <text x="58" y="196" class="title">Ask page</text>
+  <text x="58" y="218" class="sub">Staff type a question</text>
+
+  <rect x="40" y="262" width="170" height="74" rx="10" class="box"/>
+  <text x="58" y="292" class="title">REST API</text>
+  <text x="58" y="314" class="sub">Other systems / chatbots</text>
+
+  <!-- Query understanding -->
+  <rect x="250" y="70" width="210" height="96" rx="10" class="box"/>
+  <text x="268" y="100" class="title">Query pipeline</text>
+  <text x="268" y="122" class="sub">Normalise · stop words</text>
+  <text x="268" y="141" class="sub">Spelling · synonyms · topics</text>
+
+  <rect x="250" y="190" width="210" height="96" rx="10" class="accent"/>
+  <text x="268" y="220" class="title">Intent detection</text>
+  <text x="268" y="242" class="sub">Precise rules +</text>
+  <text x="268" y="261" class="sub">few-shot embedding classifier</text>
+
+  <!-- Retrieval -->
+  <rect x="490" y="70" width="190" height="62" rx="10" class="box"/>
+  <text x="508" y="97" class="title">BM25</text>
+  <text x="508" y="117" class="sub">Keyword match</text>
+
+  <rect x="490" y="146" width="190" height="62" rx="10" class="box"/>
+  <text x="508" y="173" class="title">FAISS</text>
+  <text x="508" y="193" class="sub">Semantic (embeddings)</text>
+
+  <rect x="490" y="222" width="190" height="62" rx="10" class="box"/>
+  <text x="508" y="249" class="title">Rank fusion (RRF)</text>
+  <text x="508" y="269" class="sub">Best of both lists</text>
+
+  <rect x="490" y="298" width="190" height="62" rx="10" class="box"/>
+  <text x="508" y="325" class="title">Cross-encoder</text>
+  <text x="508" y="345" class="sub">Re-scores top 10</text>
+
+  <!-- Answer -->
+  <rect x="720" y="70" width="250" height="96" rx="10" class="accent"/>
+  <text x="738" y="100" class="title">Local LLM (Ollama)</text>
+  <text x="738" y="122" class="sub">Answers only from the top sources,</text>
+  <text x="738" y="141" class="sub">with [1] [2] citations, streamed</text>
+
+  <rect x="720" y="190" width="250" height="96" rx="10" class="box"/>
+  <text x="738" y="220" class="title">Confidence engine</text>
+  <text x="738" y="242" class="sub">Reranker score · score gap ·</text>
+  <text x="738" y="261" class="sub">intent / evidence agreement</text>
+
+  <!-- Outcomes -->
+  <rect x="1010" y="70" width="150" height="96" rx="10" class="ok"/>
+  <text x="1028" y="100" class="title">Auto reply</text>
+  <text x="1028" y="122" class="sub">Sent in the</text>
+  <text x="1028" y="141" class="sub">student's thread</text>
+
+  <rect x="1010" y="190" width="150" height="96" rx="10" class="warm"/>
+  <text x="1028" y="220" class="title">Human review</text>
+  <text x="1028" y="242" class="sub">Queue with a</text>
+  <text x="1028" y="261" class="sub">drafted answer</text>
+
+  <!-- Knowledge base -->
+  <rect x="250" y="400" width="430" height="110" rx="10" class="box"/>
+  <text x="268" y="430" class="title">Knowledge base</text>
+  <text x="268" y="452" class="sub">PDF · Word · Markdown · text  →  sentence-aware chunks with page numbers</text>
+  <text x="268" y="472" class="sub">→ embeddings (cached on disk)  →  BM25 + FAISS indexes</text>
+  <text x="268" y="492" class="sub">Admins upload or delete documents; the index rebuilds automatically</text>
+
+  <!-- Insights -->
+  <rect x="720" y="400" width="440" height="110" rx="10" class="box"/>
+  <text x="738" y="430" class="title">Accounts, analytics &amp; audit</text>
+  <text x="738" y="452" class="sub">Admin console and employee workspace (role-based)</text>
+  <text x="738" y="472" class="sub">Every email, question and action is logged →</text>
+  <text x="738" y="492" class="sub">dashboards, knowledge gaps, team activity, audit trail</text>
+
+  <!-- Flows -->
+  <path d="M210 107 H230 V118 H250" class="flow"/>
+  <path d="M210 203 H230 V118 H250" class="flow"/>
+  <path d="M210 299 H230 V118" class="flow"/>
+  <path d="M355 166 V190" class="flow"/>
+  <path d="M460 101 H490" class="flow"/>
+  <path d="M460 135 H475 V177 H490" class="flow"/>
+  <path d="M585 132 V146" class="dash"/>
+  <path d="M585 208 V222" class="flow"/>
+  <path d="M585 284 V298" class="flow"/>
+  <path d="M680 329 H700 V118 H720" class="flow"/>
+  <path d="M460 276 H474 V291 H700 V270 H720" class="dash"/>
+  <path d="M845 166 V190" class="flow"/>
+  <path d="M970 222 H990 V118 H1010" class="flow"/>
+  <path d="M970 248 H1010" class="flow"/>
+  <path d="M465 400 V360" class="dash"/>
+  <path d="M1085 286 V400" class="dash"/>
+  <path d="M845 286 V400" class="dash"/>
+</svg>

@@ -1,174 +1,371 @@
-import { useState } from "react";
+import { useCallback, useEffect, useState } from "react";
+import {
+    FolderOpen,
+    Inbox,
+    LayoutDashboard,
+    Mail,
+    MessageSquareText,
+    ScrollText,
+    Settings2,
+    Users
+} from "lucide-react";
+
 import Sidebar from "./components/Sidebar";
+import PortalHeader from "./components/PortalHeader";
+import { ChangePasswordModal } from "./components/ui";
 import Home from "./pages/Home";
+import LoginPage from "./pages/LoginPage";
+import AnalyticsPage from "./pages/AnalyticsPage";
+import ReviewQueuePage from "./pages/ReviewQueuePage";
+import UsersPage from "./pages/UsersPage";
+import AuditLogPage from "./pages/AuditLogPage";
+import SystemPage from "./pages/SystemPage";
+import AutomationDashboard from "./components/AutomationDashboard";
+import DocumentManager from "./components/DocumentManager";
+
+import { getAuthStatus, getEscalations, getMe, getSession, saveSession } from "./services/api";
+
+const NAV = {
+    admin: [
+        {
+            label: "Workspace",
+            items: [
+                { id: "overview", label: "Analytics", icon: LayoutDashboard },
+                { id: "search", label: "Ask", icon: MessageSquareText },
+                { id: "queue", label: "Review queue", icon: Inbox, badge: true },
+                { id: "automation", label: "Email automation", icon: Mail }
+            ]
+        },
+        {
+            label: "Content",
+            items: [{ id: "documents", label: "Knowledge base", icon: FolderOpen }]
+        },
+        {
+            label: "Administration",
+            items: [
+                { id: "users", label: "Users", icon: Users },
+                { id: "audit", label: "Audit log", icon: ScrollText },
+                { id: "system", label: "System", icon: Settings2 }
+            ]
+        }
+    ],
+    employee: [
+        {
+            label: "Workspace",
+            items: [
+                { id: "overview", label: "Overview", icon: LayoutDashboard },
+                { id: "search", label: "Ask", icon: MessageSquareText },
+                { id: "queue", label: "Review queue", icon: Inbox, badge: true },
+                { id: "automation", label: "Test a message", icon: Mail }
+            ]
+        },
+        {
+            label: "Content",
+            items: [{ id: "documents", label: "Knowledge base", icon: FolderOpen }]
+        }
+    ]
+};
+
+function readJson(key, fallback) {
+    try {
+        const raw = localStorage.getItem(key);
+        return raw ? JSON.parse(raw) : fallback;
+    } catch {
+        return fallback;
+    }
+}
+
+function writeJson(key, value) {
+    try {
+        localStorage.setItem(key, JSON.stringify(value));
+    } catch {
+        // Storage unavailable: keep in memory only.
+    }
+}
 
 function App() {
 
-  const [darkMode, setDarkMode] = useState(() => {
-    const savedTheme = localStorage.getItem("semantic-ai-theme");
-    return savedTheme === "dark";
-  });
+    // ---------------- Theme ----------------
 
-  const [activeTab, setActiveTab] = useState("search");
-  const [newSearchTrigger, setNewSearchTrigger] = useState(0);
-  // Bumped when the API key changes so data views reload.
-  const [authVersion, setAuthVersion] = useState(0);
+    const [darkMode, setDarkMode] = useState(() => readJson("semantic-ai-theme-dark", false));
 
-  // Search History States
-  const [history, setHistory] = useState(() => {
-    const savedHistory = localStorage.getItem("semantic-ai-history");
-    return savedHistory ? JSON.parse(savedHistory) : [];
-  });
-  const [activeHistoryId, setActiveHistoryId] = useState(null);
-  const [selectedHistoryItem, setSelectedHistoryItem] = useState(null);
+    useEffect(() => {
+        document.documentElement.classList.toggle("theme-dark", darkMode);
+    }, [darkMode]);
 
-  function toggleTheme() {
-    setDarkMode((currentMode) => {
-      const newMode = !currentMode;
-      localStorage.setItem(
-        "semantic-ai-theme",
-        newMode ? "dark" : "light"
-      );
-      return newMode;
-    });
-  }
-
-  function generateTitle(query) {
-    if (!query) return "New Search";
-    
-    // Clean question patterns or filler phrases at the beginning of the query
-    let cleanQuery = query
-      .trim()
-      .replace(/^(what\s+is\s+a\s+|what\s+is\s+|how\s+does\s+|how\s+do\s+i\s+|explain\s+the\s+|explain\s+|describe\s+the\s+|describe\s+|tell\s+me\s+about\s+|show\s+me\s+|search\s+for\s+)/i, "");
-    
-    // Clean special characters at end
-    cleanQuery = cleanQuery.replace(/[?.,!/\\-]+$/, "").trim();
-    
-    if (!cleanQuery) return query.trim().substring(0, 24);
-    
-    // Capitalize first letter of words
-    const capitalized = cleanQuery
-      .split(/\s+/)
-      .map(word => word.charAt(0).toUpperCase() + word.slice(1))
-      .join(" ");
-    
-    // Truncate to a reasonable title length
-    if (capitalized.length > 25) {
-      return capitalized.substring(0, 24) + "...";
+    function toggleTheme() {
+        setDarkMode((mode) => {
+            writeJson("semantic-ai-theme-dark", !mode);
+            return !mode;
+        });
     }
-    return capitalized;
-  }
 
-  function handleSaveToHistory({ query, answer, sources, meta }) {
-    // Avoid saving if answer or query is blank
-    if (!query.trim() || !answer.trim()) return;
+    // ---------------- Session ----------------
 
-    // Check if query already exists in recent history to prevent duplicates
-    const duplicateIndex = history.findIndex(
-      (item) => item.query.toLowerCase() === query.trim().toLowerCase()
+    const [authState, setAuthState] = useState("loading");   // loading | signed-out | signed-in | offline
+    const [authStatus, setAuthStatus] = useState(null);
+    const [session, setSession] = useState(null);
+    const [notice, setNotice] = useState("");
+    const [passwordOpen, setPasswordOpen] = useState(false);
+    const [navOpen, setNavOpen] = useState(false);
+
+    const signOut = useCallback((message = "") => {
+        saveSession(null);
+        setSession(null);
+        setNotice(message);
+        setAuthState("signed-out");
+        getAuthStatus().then(setAuthStatus).catch(() => {});
+    }, []);
+
+    const checkSession = useCallback(async () => {
+        try {
+            const status = await getAuthStatus();
+            setAuthStatus(status);
+
+            const stored = getSession();
+
+            if (!stored) {
+                setAuthState("signed-out");
+                return;
+            }
+
+            const me = await getMe();
+
+            if (me.role === "viewer") {
+                saveSession(null);
+                setNotice("Your session has expired. Please sign in again.");
+                setAuthState("signed-out");
+                return;
+            }
+
+            const role = me.role === "agent" ? "employee" : me.role;
+            const refreshed = {
+                ...stored,
+                portal: role === "admin" ? (stored.portal || "admin") : "employee",
+                user: { ...stored.user, role, username: me.username, full_name: me.full_name || stored.user?.full_name }
+            };
+
+            saveSession(refreshed);
+            setSession(refreshed);
+            setAuthState("signed-in");
+        } catch {
+            setAuthState("offline");
+        }
+    }, []);
+
+    useEffect(() => {
+        const initial = setTimeout(checkSession, 0);
+        return () => clearTimeout(initial);
+    }, [checkSession]);
+
+    useEffect(() => {
+        const onExpired = (event) => signOut(event.detail || "Your session has expired. Please sign in again.");
+        window.addEventListener("auth:expired", onExpired);
+        return () => window.removeEventListener("auth:expired", onExpired);
+    }, [signOut]);
+
+    function handleSignedIn(newSession) {
+        saveSession(newSession);
+        setSession(newSession);
+        setNotice("");
+        setActiveTab(newSession.portal === "admin" ? "overview" : "queue");
+        setAuthState("signed-in");
+    }
+
+    function switchPortal() {
+        const next = { ...session, portal: session.portal === "admin" ? "employee" : "admin" };
+        saveSession(next);
+        setSession(next);
+        setActiveTab("overview");
+    }
+
+    // ---------------- Navigation ----------------
+
+    // The current page lives in the URL hash (#queue, #users…) so a
+    // refresh keeps you where you were and pages can be linked to.
+    const [activeTab, setActiveTabState] = useState(
+        () => window.location.hash.replace("#", "") || (getSession()?.portal === "employee" ? "queue" : "overview")
     );
 
-    let updatedHistory = [...history];
-
-    if (duplicateIndex !== -1) {
-      // Remove duplicate from its old position so we can prepend it
-      const [duplicateItem] = updatedHistory.splice(duplicateIndex, 1);
-      // Update its contents (in case LLM answer or sources changed)
-      const updatedItem = {
-        ...duplicateItem,
-        answer,
-        sources,
-        meta,
-        timestamp: new Date().toISOString()
-      };
-      updatedHistory.unshift(updatedItem);
-      setHistory(updatedHistory);
-      localStorage.setItem("semantic-ai-history", JSON.stringify(updatedHistory));
-      setActiveHistoryId(updatedItem.id);
-    } else {
-      // Create new history item
-      const newItem = {
-        id: Date.now().toString(),
-        title: generateTitle(query),
-        query: query.trim(),
-        answer,
-        sources,
-        meta,
-        timestamp: new Date().toISOString()
-      };
-      updatedHistory.unshift(newItem);
-      setHistory(updatedHistory);
-      localStorage.setItem("semantic-ai-history", JSON.stringify(updatedHistory));
-      setActiveHistoryId(newItem.id);
+    function setActiveTab(id) {
+        setActiveTabState(id);
+        if (window.location.hash !== `#${id}`) {
+            window.history.replaceState(null, "", `#${id}`);
+        }
     }
-  }
 
-  function handleSelectHistory(item) {
-    setActiveHistoryId(item.id);
-    setSelectedHistoryItem(item);
-    setActiveTab("search");
-  }
+    useEffect(() => {
+        const onHash = () => {
+            const id = window.location.hash.replace("#", "");
+            if (id) setActiveTabState(id);
+        };
+        window.addEventListener("hashchange", onHash);
+        return () => window.removeEventListener("hashchange", onHash);
+    }, []);
+    const [newSearchTrigger, setNewSearchTrigger] = useState(0);
+    const [pendingCount, setPendingCount] = useState(0);
 
-  function handleDeleteHistory(id) {
-    const updatedHistory = history.filter((item) => item.id !== id);
-    setHistory(updatedHistory);
-    localStorage.setItem("semantic-ai-history", JSON.stringify(updatedHistory));
+    const portal = session?.portal === "admin" ? "admin" : "employee";
+    const isAdminPortal = portal === "admin";
 
-    if (activeHistoryId === id) {
-      setActiveHistoryId(null);
-      setSelectedHistoryItem(null);
-      setNewSearchTrigger(prev => prev + 1); // trigger a reset
+    const refreshPending = useCallback(async () => {
+        try {
+            const data = await getEscalations("PENDING");
+            setPendingCount(data.count || 0);
+        } catch {
+            // Ignore: the badge simply stays as it was.
+        }
+    }, []);
+
+    useEffect(() => {
+        if (authState !== "signed-in") return undefined;
+        const initial = setTimeout(refreshPending, 0);
+        const interval = setInterval(refreshPending, 30000);
+        return () => {
+            clearTimeout(initial);
+            clearInterval(interval);
+        };
+    }, [authState, refreshPending]);
+
+    function navigate(id) {
+        setActiveTab(id);
+        setNavOpen(false);
     }
-  }
 
-  function handleClearHistory() {
-    setHistory([]);
-    localStorage.removeItem("semantic-ai-history");
-    setActiveHistoryId(null);
-    setSelectedHistoryItem(null);
-    setNewSearchTrigger(prev => prev + 1); // trigger a reset
-  }
+    // ---------------- Search history ----------------
 
-  function handleNewSearch() {
-    setActiveHistoryId(null);
-    setSelectedHistoryItem(null);
-    setNewSearchTrigger(prev => prev + 1);
-    setActiveTab("search");
-  }
+    const historyKey = `semantic-ai-history-${session?.user?.username || "anon"}`;
+    const [historyState, setHistoryState] = useState({ key: null, items: [] });
+    const history = historyState.key === historyKey ? historyState.items : readJson(historyKey, []);
 
-  function handleStartNewSearch() {
-    setActiveHistoryId(null);
-    setSelectedHistoryItem(null);
-  }
+    function setHistory(items) {
+        setHistoryState({ key: historyKey, items });
+        writeJson(historyKey, items);
+    }
 
-  return (
-    <div className={darkMode ? "app dark-mode app-container" : "app app-container"}>
-      <Sidebar
-        darkMode={darkMode}
-        toggleTheme={toggleTheme}
-        activeTab={activeTab}
-        setActiveTab={setActiveTab}
-        onNewSearch={handleNewSearch}
-        history={history}
-        activeHistoryId={activeHistoryId}
-        onSelectHistory={handleSelectHistory}
-        onDeleteHistory={handleDeleteHistory}
-        onClearHistory={handleClearHistory}
-        onAuthChange={() => setAuthVersion((v) => v + 1)}
-      />
+    const [selectedHistoryItem, setSelectedHistoryItem] = useState(null);
 
-      <main className="main-content">
-        <Home
-          authVersion={authVersion}
-          activeTab={activeTab}
-          newSearchTrigger={newSearchTrigger}
-          selectedHistoryItem={selectedHistoryItem}
-          onSaveToHistory={handleSaveToHistory}
-          onStartNewSearch={handleStartNewSearch}
-        />
-      </main>
-    </div>
-  );
+    function handleSaveToHistory({ query, answer, sources, meta }) {
+        if (!query.trim() || !answer.trim()) return;
+
+        const rest = history.filter((item) => item.query.toLowerCase() !== query.trim().toLowerCase());
+        const item = {
+            id: Date.now().toString(),
+            query: query.trim(),
+            answer,
+            sources,
+            meta,
+            timestamp: new Date().toISOString()
+        };
+
+        setHistory([item, ...rest].slice(0, 30));
+    }
+
+    // ---------------- Render ----------------
+
+    if (authState === "loading") {
+        return <div className="empty" style={{ paddingTop: "30vh" }}>Connecting…</div>;
+    }
+
+    if (authState === "offline") {
+        return (
+            <div className="page" style={{ maxWidth: 520, paddingTop: "18vh" }}>
+                <div className="card card-body stack">
+                    <h1 className="section-title" style={{ fontSize: 16 }}>Can't reach the backend</h1>
+                    <p className="muted small">
+                        Start the API on port 8000, then try again:
+                    </p>
+                    <code className="tag" style={{ height: "auto", padding: "6px 8px", whiteSpace: "normal" }}>
+                        venv\Scripts\python -m uvicorn backend.api.app:app --port 8000
+                    </code>
+                    <div>
+                        <button className="btn btn-primary" onClick={() => { setAuthState("loading"); checkSession(); }}>
+                            Try again
+                        </button>
+                    </div>
+                </div>
+            </div>
+        );
+    }
+
+    if (authState !== "signed-in" || !session) {
+        return <LoginPage status={authStatus} onSignedIn={handleSignedIn} notice={notice} />;
+    }
+
+    const groups = NAV[portal];
+    const allItems = groups.flatMap((group) => group.items);
+    const tab = allItems.some((item) => item.id === activeTab) ? activeTab : allItems[0].id;
+    const title = allItems.find((item) => item.id === tab)?.label;
+
+    function renderPage() {
+        switch (tab) {
+            case "overview":
+                return <AnalyticsPage isAdmin={isAdminPortal} />;
+            case "queue":
+                return <ReviewQueuePage onChange={refreshPending} />;
+            case "automation":
+                return <AutomationDashboard isAdmin={isAdminPortal} onChange={refreshPending} />;
+            case "documents":
+                return <DocumentManager readOnly={!isAdminPortal} />;
+            case "users":
+                return <UsersPage currentUser={session.user} />;
+            case "audit":
+                return <AuditLogPage />;
+            case "system":
+                return <SystemPage />;
+            default:
+                return (
+                    <Home
+                        newSearchTrigger={newSearchTrigger}
+                        selectedHistoryItem={selectedHistoryItem}
+                        history={history}
+                        onSaveToHistory={handleSaveToHistory}
+                        onSelectHistory={setSelectedHistoryItem}
+                        onClearHistory={() => setHistory([])}
+                        onStartNewSearch={() => setSelectedHistoryItem(null)}
+                    />
+                );
+        }
+    }
+
+    return (
+        <div className={`shell ${navOpen ? "nav-open" : ""}`} data-portal={portal}>
+            <Sidebar
+                portal={portal}
+                groups={groups}
+                activeTab={tab}
+                onNavigate={navigate}
+                pendingCount={pendingCount}
+                user={session.user}
+                method={session.method}
+                darkMode={darkMode}
+                onToggleTheme={toggleTheme}
+                onChangePassword={() => setPasswordOpen(true)}
+                onSwitchPortal={session.user.role === "admin" ? switchPortal : null}
+                onSignOut={() => signOut("")}
+            />
+            {navOpen && <div className="side-scrim" onClick={() => setNavOpen(false)} />}
+
+            <main className="shell-main">
+                <PortalHeader portal={portal} title={title} onOpenNav={() => setNavOpen(true)}>
+                    {tab === "search" && (
+                        <button
+                            className="btn btn-sm"
+                            onClick={() => {
+                                setSelectedHistoryItem(null);
+                                setNewSearchTrigger((value) => value + 1);
+                            }}
+                        >
+                            New question
+                        </button>
+                    )}
+                </PortalHeader>
+                {renderPage()}
+            </main>
+
+            {passwordOpen && <ChangePasswordModal onClose={() => setPasswordOpen(false)} />}
+        </div>
+    );
 }
 
 export default App;

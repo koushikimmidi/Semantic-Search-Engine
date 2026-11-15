@@ -34,3 +34,16 @@ data/cache/
 data/index/embedding_cache.pkl
 data/index/*.tmp
 .pytest_cache/
+
+# Accounts database and token secret
+data/automation/app.db*
+data/automation/auth_secret.key
+
+# Generated indexes and caches
+data/embeddings/
+data/index/
+data/processed/
+
+# Local tooling
+.claude/
+*.tmp

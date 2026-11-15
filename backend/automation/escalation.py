@@ -223,7 +223,7 @@ class EscalationManager:
 
         return None
 
-    def resolve(self, escalation_id, resolution_note=None, reply=None):
+    def resolve(self, escalation_id, resolution_note=None, reply=None, resolved_by=None):
 
         with self._lock:
 
@@ -241,6 +241,9 @@ class EscalationManager:
 
                     if reply is not None:
                         item["reply"] = reply
+
+                    if resolved_by:
+                        item["resolved_by"] = resolved_by
 
                     self._save()
 
