@@ -24,6 +24,5 @@ tests/
 data/automation/
 data/documents/old_development/
 .github/
-.claude/
 *.md
 !README.md

@@ -39,6 +39,9 @@ and hands only the uncertain ones to a person.**
 - [Troubleshooting](#troubleshooting)
 - [Security](#security)
 - [Roadmap](#roadmap)
+- [Documentation](#documentation)
+- [Contributing](#contributing)
+- [Author](#author)
 - [License](#license)
 
 ---
@@ -83,7 +86,8 @@ the same code works in any sector that handles repetitive questions:
 | 🏢 **HR & internal IT help desks** | Leave policy, payroll, onboarding, password resets, VPN and software access |
 
 To switch domains you replace the documents, adjust a few example questions, and re-tune two
-thresholds with the included evaluation script — see [Using it for another domain](#using-it-for-another-domain).
+thresholds with the included evaluation script — see [Using it for another domain](#using-it-for-another-domain)
+and the detailed **[sector guide](docs/use-cases.md)** (documents, intents and caution level for each sector).
 
 ## Features
 
@@ -374,6 +378,7 @@ Semantic-Search-Engine/
 ├── docs/
 │   ├── images/           Screenshots and the architecture diagram
 │   ├── architecture.md   Architecture notes
+│   ├── use-cases.md      Sector-by-sector setup guide
 │   └── history/          Early development reports and notes
 ├── .github/workflows/    CI: backend tests, frontend lint/build, Docker build
 ├── docker-compose.yml    Ollama + API + web interface
@@ -381,7 +386,10 @@ Semantic-Search-Engine/
 ├── requirements.txt      Python dependencies (pinned, tested)
 ├── requirements-dev.txt  + pytest, httpx
 ├── .env.example          Configuration template
-└── CHANGELOG.md
+├── CHANGELOG.md
+├── CONTRIBUTING.md     How to contribute
+├── SECURITY.md         Reporting vulnerabilities
+└── LICENSE             MIT
 ```
 
 Runtime data — accounts database, review queue, run history, embedding cache, logs — is created
@@ -510,6 +518,28 @@ Auto-replies, mark-as-read and the schedule can also be changed at runtime in **
 - Answer-faithfulness check before auto-sending
 - Multi-turn conversations and multilingual support
 - More channels: website chat widget, WhatsApp, Telegram, Slack
+
+## Documentation
+
+| Document | What it covers |
+| --- | --- |
+| [docs/use-cases.md](docs/use-cases.md) | Setting the engine up for education, healthcare, banking, retail, telecom, insurance, government and HR |
+| [docs/architecture.md](docs/architecture.md) | Request and indexing paths, module by module |
+| [CHANGELOG.md](CHANGELOG.md) | What changed in each version |
+| [SECURITY.md](SECURITY.md) | Reporting vulnerabilities and a deployment checklist |
+| [CONTRIBUTING.md](CONTRIBUTING.md) | Development setup and pull-request checklist |
+
+## Contributing
+
+Issues and pull requests are welcome — see [CONTRIBUTING.md](CONTRIBUTING.md). Please report
+security problems privately as described in [SECURITY.md](SECURITY.md).
+
+## Author
+
+**Koushik Immidi** — design, development and documentation.
+GitHub: [koushikimmidi](https://github.com/koushikimmidi)
+
+If this project is useful to you, consider giving it a ⭐ on GitHub.
 
 ## License
 

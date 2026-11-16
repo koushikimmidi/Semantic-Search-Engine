@@ -1,0 +1,47 @@
+name: Bug report
+description: Something isn't working as expected
+labels: ["bug"]
+body:
+  - type: textarea
+    id: what-happened
+    attributes:
+      label: What happened?
+      description: What did you do, what did you expect, and what happened instead?
+    validations:
+      required: true
+  - type: textarea
+    id: steps
+    attributes:
+      label: Steps to reproduce
+      placeholder: |
+        1. Go to …
+        2. Click …
+        3. See error …
+    validations:
+      required: true
+  - type: dropdown
+    id: area
+    attributes:
+      label: Area
+      options:
+        - Ask / search answers
+        - Review queue
+        - Email automation
+        - Knowledge base / indexing
+        - Accounts & sign-in
+        - Analytics
+        - Installation / Docker
+        - Other
+    validations:
+      required: true
+  - type: input
+    id: environment
+    attributes:
+      label: Environment
+      placeholder: "Windows 11, Python 3.13, Node 24, Ollama model gemma4"
+  - type: textarea
+    id: logs
+    attributes:
+      label: Logs or screenshots
+      description: Backend terminal output or browser console errors. Remove any passwords or personal data.
+      render: text

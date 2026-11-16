@@ -45,5 +45,4 @@ data/index/
 data/processed/
 
 # Local tooling
-.claude/
 *.tmp

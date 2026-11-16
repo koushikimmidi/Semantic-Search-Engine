@@ -2,6 +2,13 @@
 
 All notable changes to this project.
 
+## 2.3.0 — Repository and documentation
+
+- Sector guide (`docs/use-cases.md`): documents, intents and caution level for education,
+  healthcare, banking, retail, telecom, insurance, government and HR help desks
+- Security policy, contributing guide, issue and pull-request templates
+- Dependabot for Python, npm and GitHub Actions; `.editorconfig`
+
 ## 2.2.0 — Brand colour
 
 - Deep-teal brand colour across the interface: solid brand sidebar, primary buttons,

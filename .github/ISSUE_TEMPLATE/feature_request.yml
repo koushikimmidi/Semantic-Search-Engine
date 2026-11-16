@@ -1,0 +1,26 @@
+name: Feature request
+description: Suggest an improvement or a new capability
+labels: ["enhancement"]
+body:
+  - type: textarea
+    id: problem
+    attributes:
+      label: What problem would this solve?
+      description: Describe the situation and who it helps (e.g. support staff, admins, customers).
+    validations:
+      required: true
+  - type: textarea
+    id: proposal
+    attributes:
+      label: Proposed solution
+    validations:
+      required: true
+  - type: input
+    id: sector
+    attributes:
+      label: Sector / use case
+      placeholder: "e.g. banking help desk, hospital front office, university admissions"
+  - type: textarea
+    id: alternatives
+    attributes:
+      label: Alternatives considered
