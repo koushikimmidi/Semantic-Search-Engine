@@ -54,7 +54,7 @@
 
 .queue-item.active {
     background: var(--surface-2);
-    border-left-color: var(--text);
+    border-left-color: var(--brand);
 }
 
 .queue-item-top {

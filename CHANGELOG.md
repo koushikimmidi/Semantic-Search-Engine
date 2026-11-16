@@ -2,6 +2,13 @@
 
 All notable changes to this project.
 
+## 2.2.0 — Brand colour
+
+- Deep-teal brand colour across the interface: solid brand sidebar, primary buttons,
+  links, focus rings, selected items and single-series charts (all text meets WCAG AA contrast)
+- Sign-in page with a brand panel summarising what the product does
+- Light top bar for a crisp split against the sidebar; matching dark theme
+
 ## 2.1.0 — Interface redesign
 
 - New interface design: IBM Plex type, warm neutral palette, line icons, light and dark themes

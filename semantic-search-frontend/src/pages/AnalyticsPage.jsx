@@ -236,8 +236,8 @@ function AnalyticsPage({ isAdmin }) {
                                             <XAxis dataKey="date" tickFormatter={shortDate} minTickGap={28} {...axis} />
                                             <YAxis allowDecimals={false} {...axis} />
                                             <Tooltip content={<QuestionTooltip />} cursor={{ stroke: "var(--line-strong)" }} />
-                                            <Area type="monotone" dataKey="searches" stroke="var(--series-1)" strokeWidth={2}
-                                                fill="var(--series-1)" fillOpacity={0.08} dot={false}
+                                            <Area type="monotone" dataKey="searches" stroke="var(--brand)" strokeWidth={2}
+                                                fill="var(--brand)" fillOpacity={0.08} dot={false}
                                                 activeDot={{ r: 4, stroke: "var(--chart-surface)", strokeWidth: 2 }} isAnimationActive={false} />
                                         </AreaChart>
                                     </ResponsiveContainer>

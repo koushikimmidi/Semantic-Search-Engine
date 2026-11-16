@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { BarChart3, BookOpenCheck, ShieldCheck } from "lucide-react";
 import { login, loginWithApiKey, setupAdmin } from "../services/api";
 import { Notice } from "../components/ui";
 import "../styles/login.css";
@@ -69,11 +70,25 @@ function LoginPage({ status, onSignedIn, notice }) {
 
     return (
         <div className="login">
-            <header className="login-top">
-                <div className="brand-mark" aria-hidden="true">S</div>
-                <span>Semantic Search</span>
-            </header>
+            <aside className="login-brand">
+                <div className="login-brand-name">
+                    <div className="brand-mark" aria-hidden="true">S</div>
+                    <span>Semantic Search</span>
+                </div>
 
+                <div className="login-brand-body">
+                    <h2>Answers from your own documents, checked before they're sent.</h2>
+                    <ul>
+                        <li><BookOpenCheck size={18} /><span>Every answer cites the policy or guide it came from.</span></li>
+                        <li><ShieldCheck size={18} /><span>Only confident answers go out automatically; the rest come to your team.</span></li>
+                        <li><BarChart3 size={18} /><span>See what people ask and which documents are missing.</span></li>
+                    </ul>
+                </div>
+
+                <div className="login-brand-foot">Runs on your own servers. Questions and documents stay private.</div>
+            </aside>
+
+            <div className="login-pane">
             <main className="login-main">
                 <form className="login-form" onSubmit={handleSubmit}>
                     <div>
@@ -163,6 +178,7 @@ function LoginPage({ status, onSignedIn, notice }) {
             <footer className="login-foot">
                 Admins manage the engine, documents and team. Employees answer the review queue.
             </footer>
+            </div>
         </div>
     );
 }
