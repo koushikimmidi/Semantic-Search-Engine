@@ -7,7 +7,7 @@ All notable changes to this project.
 - Sector guide (`docs/use-cases.md`): documents, intents and caution level for education,
   healthcare, banking, retail, telecom, insurance, government and HR help desks
 - Security policy, contributing guide, issue and pull-request templates
-- Dependabot for Python, npm and GitHub Actions; `.editorconfig`
+- `.editorconfig` for consistent formatting
 
 ## 2.2.0 — Brand colour
 

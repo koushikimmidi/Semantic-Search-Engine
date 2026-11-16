@@ -26,4 +26,4 @@ acknowledgement within a few days, and a fix or mitigation plan once the issue i
 - Serve the app over HTTPS when it is reachable from the internet.
 - Keep automatic email replies off until you have reviewed answer quality.
 - Restrict who can reach the API (firewall / reverse proxy) if it handles sensitive data.
-- Keep dependencies up to date (Dependabot is configured for this repository).
+- Keep dependencies up to date (`pip install -U -r requirements.txt`, `npm update`) and re-run the tests.
